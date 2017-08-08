@@ -47,13 +47,13 @@ set-locales:
 test-run: test-syntax test-pytest
 
 test-syntax:
-	pycodestyle --max-line-length=100 tuxeatpi_base
-	pylint --rcfile=.pylintrc -r no tuxeatpi_base
+	env/bin/pycodestyle --max-line-length=100 tuxeatpi_common
+	env/bin/pylint --rcfile=.pylintrc -r no tuxeatpi_common
 
 test-pytest:
 	rm -rf .coverage nosetest.xml nosetests.html htmlcov
-	pytest --html=pytest/report.html --self-contained-html --junit-xml=pytest/junit.xml --cov=tuxeatpi_base/ --cov-report=term --cov-report=html:pytest/coverage/html --cov-report=xml:pytest/coverage/coverage.xml tests 
+	env/bin/pytest --html=pytest/report.html --self-contained-html --junit-xml=pytest/junit.xml --cov=tuxeatpi_common/ --cov-report=term --cov-report=html:pytest/coverage/html --cov-report=xml:pytest/coverage/coverage.xml tests 
 	coverage combine || true
-	coverage report --include='*/tuxeatpi_base/*'
+	coverage report --include='*/tuxeatpi_common/*'
 	# CODECLIMATE_REPO_TOKEN=${CODECLIMATE_REPO_TOKEN} codeclimate-test-reporter
 

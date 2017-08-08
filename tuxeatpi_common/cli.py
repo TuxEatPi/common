@@ -5,7 +5,7 @@ import click
 import daemonocle
 from setproctitle import setproctitle  # pylint: disable=E0611
 
-from tuxeatpi_base.daemon import TepBaseDaemon
+from tuxeatpi_common.daemon import TepBaseDaemon
 
 DAEMON_CLASS = None
 

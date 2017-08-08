@@ -2,8 +2,8 @@
 import logging
 import time
 
-from tuxeatpi_base.message import is_mqtt_topic, MqttClient, Message
-from tuxeatpi_base.error import TuxEatPiError
+from tuxeatpi_common.message import is_mqtt_topic, MqttClient, Message
+from tuxeatpi_common.error import TuxEatPiError
 
 
 class TepBaseDaemon(object):

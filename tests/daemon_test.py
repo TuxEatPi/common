@@ -10,8 +10,8 @@ import pytest
 import daemonocle
 
 
-from tuxeatpi_base.common import main_cli, set_daemon_class
-from tuxeatpi_base.daemon import TepBaseDaemon
+from tuxeatpi_common.cli import main_cli, set_daemon_class
+from tuxeatpi_common.daemon import TepBaseDaemon
 
 from click.testing import CliRunner
 

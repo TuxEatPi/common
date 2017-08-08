@@ -5,3 +5,5 @@ doc/build
 *.egg-info/
 pytest/
 dist/
+.cache/
+.coverage

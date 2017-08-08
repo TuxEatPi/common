@@ -4,7 +4,7 @@ import json
 
 import paho.mqtt.client as paho
 
-from tuxeatpi_base.error import TuxEatPiError
+from tuxeatpi_common.error import TuxEatPiError
 
 
 class MqttClient(paho.Client):
