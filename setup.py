@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from pip.req import parse_requirements
+from pip.download import PipSession
 from setuptools import setup
+
 
 long_desc = """Poor Tux needs a new heart. We do that by feeding it a raspberrypi.
 
@@ -15,9 +18,14 @@ The end goal is to keep Tux's basic functionnality:
 - Volume button
 """
 
+session = PipSession()
+
 packages = [
             'tuxeatpi_common',
             ]
+
+install_reqs = parse_requirements('requirements.txt', session=session)
+test_reqs = parse_requirements('test_requirements.txt', session=session)
 
 setup(
     name='tuxeatpi_common',
@@ -36,5 +44,7 @@ setup(
     license='Apache 2.0',
     classifiers=(
         'Programming Language :: Python :: 3.5',
-    )
+    ),
+    install_requires=[str(r.req) for r in install_reqs],
+    tests_require=[str(r.req) for r in test_reqs],
 )
