@@ -23,12 +23,14 @@ class MqttClient(paho.Client):
         class_name, function = msg.topic.split("/")
         if self.parent.name.lower() != class_name.lower():
             self.logger.error("Bad destination")
-        elif not hasattr(self.parent, function):
-            self.logger.error("Bad destination function")
+        elif function not in self.topics:
+            self.logger.error("Bad destination function %s/%s",
+                              self.parent, function)
         else:
             payload = json.loads(msg.payload.decode())
             data = payload.get("data", {})
-            getattr(self.parent, function)(**data.get('arguments', {}))
+            method_name = self.topics[function]
+            getattr(self.parent, method_name)(**data.get('arguments', {}))
 
     def on_connect(self, client, userdata, flags, rc):  # pylint: disable=W0221,W0613
         """Callback on server connect"""
@@ -41,12 +43,12 @@ class MqttClient(paho.Client):
 
     def on_publish(self, client, userdata, mid):  # pylint: disable=W0221,W0613
         """Callback on message publish"""
-        self.logger.info("Message published")
+        self.logger.debug("Message published")
 
     def run(self):
         """Run MQTT client"""
         self.connect("127.0.0.1", 1883, 60)
-        for topic in self.topics:
+        for topic in self.topics.keys():
             topic_name = "/".join((self.parent.name, topic))
             self.subscribe(topic_name, 0)
             self.logger.info("Subcribe to topic %s", topic_name)

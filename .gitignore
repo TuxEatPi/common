@@ -7,3 +7,4 @@ pytest/
 dist/
 .cache/
 .coverage
+pytestdebug.log

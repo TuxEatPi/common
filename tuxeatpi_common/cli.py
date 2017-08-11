@@ -1,4 +1,5 @@
 """TuxEatPi Base Main module"""
+
 import os
 
 import click
@@ -10,12 +11,15 @@ from tuxeatpi_common.daemon import TepBaseDaemon
 DAEMON_CLASS = None
 
 
-def _prepare_command(daemon, pid_file, name=None):
+def _prepare_command(daemon, pid_file, name=None, **kwargs):
     """Run start commands to prepare the daemon"""
     # Get prog name
     prog_name = DAEMON_CLASS.__name__.lower()
     # Init daemon
-    tep_daemon = DAEMON_CLASS(daemon, name)
+    if kwargs is not None:
+        tep_daemon = DAEMON_CLASS(daemon, name, **kwargs)
+    else:
+        tep_daemon = DAEMON_CLASS(daemon, name)
     # Set main loop
     daemon.worker = tep_daemon.start
     # Set shutdown
@@ -45,7 +49,7 @@ def set_daemon_class(class_object):
 @click.option('--group', '-g', default=None, help="Group")
 @click.option('--workdir', '-w', default=None, help="Working directory")
 @click.option('--pid-file', '-p', default=None, help="PID File")
-def start(daemon, user, group, workdir, pid_file):
+def start(daemon, user, group, workdir, pid_file, **kwargs):
     """Start command"""
     if daemon is None:
         daemon = False
@@ -67,7 +71,7 @@ def start(daemon, user, group, workdir, pid_file):
                                close_open_files=False,
                                )
     # Standard preparation
-    _prepare_command(daemon, pid_file, prog_name)
+    _prepare_command(daemon, pid_file, prog_name, **kwargs)
     # Run the deamon
     daemon.do_action('start')
 
