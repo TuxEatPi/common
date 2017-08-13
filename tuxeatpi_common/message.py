@@ -1,5 +1,6 @@
 """Module defining TuxEatPi Messages"""
 
+import logging
 import json
 
 import paho.mqtt.client as paho
@@ -10,27 +11,26 @@ from tuxeatpi_common.error import TuxEatPiError
 class MqttClient(paho.Client):
     """MQTT client class"""
 
-    def __init__(self, parent, logger, topics=None):
-        paho.Client.__init__(self, clean_session=True, userdata=parent.name)
-        self.parent = parent
-        self.topics = topics
-        self.logger = logger
+    def __init__(self, component):
+        paho.Client.__init__(self, clean_session=True, userdata=component.name)
+        self.component = component
+        self.topics = component.topics
+        self.logger = logging.getLogger(name="tep").getChild(component.name).getChild('mqttclient')
 
     def on_message(self, mqttc, obj, msg):  # pylint: disable=W0221,W0613
         """Callback on receive message"""
         self.logger.debug("topic: %s - QOS: %s - payload: %s",
                           msg.topic, str(msg.qos), str(msg.payload))
         class_name, function = msg.topic.split("/")
-        if self.parent.name.lower() != class_name.lower():
+        if self.component.name.lower() != class_name.lower() and class_name != "global":
             self.logger.error("Bad destination")
-        elif function not in self.topics:
-            self.logger.error("Bad destination function %s/%s",
-                              self.parent, function)
+        elif msg.topic not in self.topics:
+            self.logger.error("Bad destination function %s", msg.topic)
         else:
             payload = json.loads(msg.payload.decode())
             data = payload.get("data", {})
-            method_name = self.topics[function]
-            getattr(self.parent, method_name)(**data.get('arguments', {}))
+            method_name = self.topics[msg.topic]
+            getattr(self.component, method_name)(**data.get('arguments', {}))
 
     def on_connect(self, client, userdata, flags, rc):  # pylint: disable=W0221,W0613
         """Callback on server connect"""
@@ -48,8 +48,7 @@ class MqttClient(paho.Client):
     def run(self):
         """Run MQTT client"""
         self.connect("127.0.0.1", 1883, 60)
-        for topic in self.topics.keys():
-            topic_name = "/".join((self.parent.name, topic))
+        for topic_name in self.topics.keys():
             self.subscribe(topic_name, 0)
             self.logger.info("Subcribe to topic %s", topic_name)
         self.loop_start()
