@@ -1,7 +1,5 @@
 """Module defining Base Daemon for TuxEatPi daemons"""
-import asyncio
 import logging
-import os
 import time
 
 from tuxeatpi_common.message import is_mqtt_topic, MqttClient, Message
@@ -102,7 +100,7 @@ class TepBaseDaemon(object):
         """Confirmation topic to the Intent was received and
         processed by the NLU component.
         """
-        intent_id = "/".join((intent_name, intent_lang, intent_lang, intent_file))
+        intent_id = "/".join((intent_lang, intent_name, intent_file))
         if state:
             self.logger.info("Intent %s added to sent_intents list", intent_id)
             self.sent_intents.add(intent_id)

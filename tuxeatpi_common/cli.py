@@ -48,7 +48,8 @@ def set_daemon_class(class_object):
 @click.option('--group', '-g', default=None, help="Group")
 @click.option('--pid-file', '-p', default=None, help="PID File")
 @click.option('--workdir', '-w', required=True, help="Working directory",
-              type=click.Path(exists=True, file_okay=False, dir_okay=True, readable=True, writable=True))
+              type=click.Path(exists=True, file_okay=False, dir_okay=True, readable=True,
+                              writable=True))
 @click.option('--intent-folder', '-I', required=True, help="Intent folder",
               type=click.Path(exists=True, file_okay=False, dir_okay=True, readable=True))
 @click.option('--dialog-folder', '-D', required=True, help="Dialog folder",

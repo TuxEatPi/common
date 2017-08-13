@@ -21,7 +21,7 @@ class MqttClient(paho.Client):
         """Callback on receive message"""
         self.logger.debug("topic: %s - QOS: %s - payload: %s",
                           msg.topic, str(msg.qos), str(msg.payload))
-        class_name, function = msg.topic.split("/")
+        class_name, _ = msg.topic.split("/")
         if self.component.name.lower() != class_name.lower() and class_name != "global":
             self.logger.error("Bad destination")
         elif msg.topic not in self.topics:

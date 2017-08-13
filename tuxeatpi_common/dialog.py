@@ -8,7 +8,7 @@ import random
 
 class DialogHandler(object):
     """Class getting dialog for voice"""
-    
+
     def __init__(self, dialog_path, component_name):
         self.dialog_path = dialog_path
         self.logger = logging.getLogger(name="tep").getChild(component_name).getChild('dialog')
@@ -39,8 +39,7 @@ class DialogHandler(object):
             return
         # Get only one dialog
         dialogs = self.dialogs.get(language, {}).get(key)
-        if len(dialogs) == 0:
+        if dialogs:
             self.logger.error("Empty dialog file %s for language %s", key, language)
             return
-        else:
-            return random.sample(dialogs, 1)[0]
+        return random.sample(dialogs, 1)[0]

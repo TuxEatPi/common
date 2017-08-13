@@ -1,11 +1,14 @@
+"""Module defining the init process for TuxEatPi component"""
 import logging
 import os
 import time
 
 from tuxeatpi_common.message import Message
+from tuxeatpi_common.error import TuxEatPiError
 
 
 class Initializer():
+    """Initializer class to run init action for a component"""
 
     def __init__(self, component):
         self.component = component
@@ -74,7 +77,7 @@ class Initializer():
                     intent_name = intent_folder.name
                     for intent_file in os.scandir(intent_folder.path):
                         if intent_file.is_file():
-                            intent_id = "/".join((intent_name, intent_lang, intent_lang, intent_file.name))
+                            intent_id = "/".join((intent_lang, intent_name, intent_file.name))
                             with open(intent_file.path, "r") as mfh:
                                 intent_data = mfh.read()
                                 data = {"arguments": {"intent_name": intent_name,
@@ -84,8 +87,8 @@ class Initializer():
                                                       "intent_data": intent_data}}
                                 topic = "nlu/send_intent"
                                 message = Message(topic, data)
-                                # Wait for NLU component
-                                while self.component._component_states.get("nlu", {}).get("state") not in ("INIT", "ALIVE"):
+                                nlu_component = self.component._component_states.get("nlu", {})
+                                while nlu_component.get("state") not in ("INIT", "ALIVE"):
                                     self.logger.info("Waiting for nlu component")
                                     time.sleep(1)
 

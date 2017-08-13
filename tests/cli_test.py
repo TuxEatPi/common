@@ -32,7 +32,7 @@ class TestCli(object):
         runner = CliRunner()
         set_daemon_class(TepBaseDaemon)
         result = runner.invoke(main_cli, ['status'])
-        assert result.output == 'pytest -- not running\n'
+        assert result.output == 'tepbasedaemon -- not running\n'
         assert result.exit_code == 1
 
     @pytest.mark.order3
@@ -41,5 +41,5 @@ class TestCli(object):
         runner = CliRunner()
         set_daemon_class(TepBaseDaemon)
         result = runner.invoke(main_cli, ['stop'])
-        assert result.output == 'WARNING: pytest is not running\n'
+        assert result.output == 'WARNING: tepbasedaemon is not running\n'
         assert result.exit_code == 0

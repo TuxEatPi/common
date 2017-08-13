@@ -21,7 +21,8 @@ class SubTasker(threading.Thread):
         """Send alive request every 15 seconds"""
         while True:
             now = time.time()
-            data = {"arguments": {"component_name": self.component.name, "date": now, "state": "ALIVE"}}
+            data = {"arguments": {"component_name": self.component.name,
+                                  "date": now, "state": "ALIVE"}}
             message = Message("global/alive", data)
             self.logger.info("Send alive request")
             self.component.publish(message)
