@@ -5,6 +5,8 @@ from os import scandir
 from os.path import splitext
 import random
 
+import jinja2
+
 
 class DialogHandler(object):
     """Class getting dialog for voice"""
@@ -29,7 +31,7 @@ class DialogHandler(object):
                                 self.dialogs.get(language).get(key).add(sentence.strip())
         self.logger.info('Dialogs loaded %s', self.dialogs)
 
-    def get_dialog(self, language, key):
+    def get_dialog(self, language, key, **kwargs):
         """Return one sentente related to a key and a language"""
         if language not in self.dialogs:
             self.logger.error("Language %s not supported", language)
@@ -42,4 +44,8 @@ class DialogHandler(object):
         if not dialogs:
             self.logger.error("Empty dialog file %s for language %s", key, language)
             return
-        return random.sample(dialogs, 1)[0]
+        dialog = random.sample(dialogs, 1)[0]
+        if kwargs:
+            template = jinja2.Template(dialog)
+            dialog = template.render(**kwargs)
+        return dialog

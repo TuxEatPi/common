@@ -1,4 +1,5 @@
 """Module defining Base Daemon for TuxEatPi daemons"""
+import locale
 import logging
 import time
 
@@ -79,8 +80,11 @@ class TepBaseDaemon(object):
         self.logger.debug("Config received for brain: %s", config)
         # Set language first
         if self.language != global_config['language']:
+            # TODO check language
             self.language = global_config['language']
             self.logger.info("Language %s set", self.language)
+            # Set locale
+            locale.setlocale(locale.LC_ALL, self.language + "." + locale.getpreferredencoding())
         # Set NLU
         if self.nlu_engine != global_config['nlu_engine']:
             self.nlu_engine = global_config['nlu_engine']
@@ -138,8 +142,9 @@ class TepBaseDaemon(object):
         """Reload the daemon"""
         self.logger.info("Reload action not Reimplemented. Do nothing")
 
-    def get_dialog(self, key):
-        return self.dialog_handler.get_dialog(self.language, key)
+    def get_dialog(self, key, **kwargs):
+        """Get dialog and render it"""
+        return self.dialog_handler.get_dialog(self.language, key, **kwargs)
 
     def set_config(self, config):
         """Save the configuration and reload the daemon
@@ -171,6 +176,7 @@ class TepBaseDaemon(object):
     def shutdown(self):
         """Shutdown the daemon form mqtt message"""
         self.logger.info("Just calling common shutdown_callback method")
+        self.shutdown_callback("", "")
 
     def shutdown_callback(self, message, code):
         """Shutdown the daemon from command line"""

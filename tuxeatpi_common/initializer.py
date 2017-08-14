@@ -91,6 +91,8 @@ class Initializer():
                                 while nlu_component.get("state") not in ("INIT", "ALIVE"):
                                     self.logger.info("Waiting for nlu component")
                                     time.sleep(1)
+                                    # FIXME is that a correct refresh ??
+                                    nlu_component = self.component._component_states.get("nlu", {})
 
                                 self.component.publish(message)
                                 self.logger.info("Waiting for intent %s received", intent_id)
