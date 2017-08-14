@@ -138,6 +138,9 @@ class TepBaseDaemon(object):
         """Reload the daemon"""
         self.logger.info("Reload action not Reimplemented. Do nothing")
 
+    def get_dialog(self, key):
+        return self.dialog_handler.get_dialog(self.language, key)
+
     def set_config(self, config):
         """Save the configuration and reload the daemon
 

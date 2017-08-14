@@ -25,9 +25,9 @@ class DialogHandler(object):
                         key = splitext(dialog_file.name)[0]
                         self.dialogs.get(language).setdefault(key, set())
                         with open(dialog_file.path, "r") as dfh:
-                            sentence = dfh.readline().strip()
-                            self.dialogs.get(language).get(key).add(sentence)
-        self.logger.info('Dialogs loaded')
+                            for sentence in dfh.readlines():
+                                self.dialogs.get(language).get(key).add(sentence.strip())
+        self.logger.info('Dialogs loaded %s', self.dialogs)
 
     def get_dialog(self, language, key):
         """Return one sentente related to a key and a language"""
@@ -39,7 +39,7 @@ class DialogHandler(object):
             return
         # Get only one dialog
         dialogs = self.dialogs.get(language, {}).get(key)
-        if dialogs:
+        if not dialogs:
             self.logger.error("Empty dialog file %s for language %s", key, language)
             return
         return random.sample(dialogs, 1)[0]
