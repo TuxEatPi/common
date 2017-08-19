@@ -1,7 +1,8 @@
 """Module defining TuxEatPi Messages"""
 
-import logging
 import json
+import logging
+import os
 
 import paho.mqtt.client as paho
 
@@ -15,10 +16,13 @@ class MqttSender(paho.Client):
         paho.Client.__init__(self, clean_session=True, userdata=component.name)
         self.component = component
         self.logger = logging.getLogger(name="tep").getChild(component.name).getChild('mqttsender')
+        self.host = os.environ.get("TEP_MQTT_HOST", "127.0.0.1")
+        self.port = int(os.environ.get("TEP_MQTT_PORT", 1883))
 
     def run(self):
         """Run MQTT client"""
-        self.connect("127.0.0.1", 1883, 60)
+        # TODO handle reconnect
+        self.connect(self.host, self.port, 60)
         self.loop_start()
 
     def stop(self):
@@ -35,6 +39,8 @@ class MqttClient(paho.Client):
         self.component = component
         self.topics = component.topics
         self.logger = logging.getLogger(name="tep").getChild(component.name).getChild('mqttclient')
+        self.host = os.environ.get("TEP_MQTT_HOST", "127.0.0.1")
+        self.port = int(os.environ.get("TEP_MQTT_PORT", 1883))
 
     def on_message(self, mqttc, obj, msg):  # pylint: disable=W0221,W0613
         """Callback on receive message"""
@@ -66,7 +72,8 @@ class MqttClient(paho.Client):
 
     def run(self):
         """Run MQTT client"""
-        self.connect("127.0.0.1", 1883, 60)
+        # TODO handle reconnect
+        self.connect(self.host, self.port, 60)
         for topic_name in self.topics.keys():
             self.subscribe(topic_name, 0)
             self.logger.info("Subcribe to topic %s", topic_name)

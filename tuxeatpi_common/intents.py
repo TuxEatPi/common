@@ -7,7 +7,9 @@ import etcd
 class IntentsHandler(object):
 
     def __init__(self, component):
-        self.etcd_client = etcd.Client()
+        self.host = os.environ.get("TEP_ETCD_HOST", "127.0.0.1")
+        self.port = int(os.environ.get("TEP_ETCD_PORT", 4001))
+        self.etcd_client = etcd.Client(host=self.host, port=self.port)
         self.logger = logging.getLogger(name="tep").getChild(component.name).getChild('intents')
         self.folder = component.intent_folder
         self.name = component.name

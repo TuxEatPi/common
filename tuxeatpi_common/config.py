@@ -12,7 +12,9 @@ class ConfigHandler(object):
         self.component = component
         self.key = os.path.join("/config", self.component.name)
         self.global_key = os.path.join("/config/global")
-        self.etcd_client = etcd.Client()
+        self.host = os.environ.get("TEP_ETCD_HOST", "127.0.0.1")
+        self.port = int(os.environ.get("TEP_ETCD_PORT", 4001))
+        self.etcd_client = etcd.Client(host=self.host, port=self.port)
         self.logger = logging.getLogger(name="tep").getChild(component.name).getChild('config')
 
     def save(self, value, key=None):

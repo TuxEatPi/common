@@ -7,7 +7,9 @@ class MemoryHandler(object):
 
     def __init__(self, key):
         self.key = os.path.join("/memory", key)
-        self.etcd_client = etcd.Client()
+        self.host = os.environ.get("TEP_ETCD_HOST", "127.0.0.1")
+        self.port = int(os.environ.get("TEP_ETCD_PORT", 4001))
+        self.etcd_client = etcd.Client(host=self.host, port=self.port)
 
     def save(self, value):
         self.etcd_client.write(self.key, value)
