@@ -3,11 +3,14 @@ import locale
 import logging
 import time
 
-from tuxeatpi_common.message import is_mqtt_topic, MqttClient, Message
+from tuxeatpi_common.message import is_mqtt_topic, MqttClient, Message, MqttSender
 from tuxeatpi_common.error import TuxEatPiError
 from tuxeatpi_common.subtasker import SubTasker
 from tuxeatpi_common.dialog import DialogHandler
 from tuxeatpi_common.initializer import Initializer
+from tuxeatpi_common.memory import MemoryHandler
+from tuxeatpi_common.config import ConfigHandler
+from tuxeatpi_common.intents import IntentsHandler
 
 
 class TepBaseDaemon(object):
@@ -32,22 +35,28 @@ class TepBaseDaemon(object):
         self.topics = {}
         # Get mqtt client
         self._mqtt_client = MqttClient(self)
+        self._mqtt_sender = MqttSender(self)
         # Set the main loop to ON
         self._run_main_loop = True
         self._initializer = Initializer(self)
         self._tasks_thread = SubTasker(self)
         # Other component states
         self._component_states = {}
+        self.config = None
+        self.language = None
+        self.nlu_engine = None
+        self._bypass_intent_sending = False
+        self._reload_needed = False
         # Intents
         self.sent_intents = set()
         # Dialogs
         self.dialog_handler = DialogHandler(self.dialog_folder, self.name)
+        # Memory
+        self.memh = MemoryHandler(self.name)
+        # Intents
+        self.intents_handler = IntentsHandler(self)
         # Configuration
-        self.language = None
-        self.nlu_engine = None
-        self.configured = False
-        self._bypass_intent_sending = False
-        self._reload_needed = False
+        self.confh = ConfigHandler(self)
 
     # Misc
     def _get_logger(self):
@@ -60,7 +69,7 @@ class TepBaseDaemon(object):
         self.logger.addHandler(console_handler)
 
     # MQTT Related
-    def publish(self, message, override_topic=None):
+    def publish(self, message, override_topic=None, qos=0):
         """Publish message to MQTT"""
         if not isinstance(message, Message):
             raise TuxEatPiError("message must be a Message object")
@@ -68,36 +77,7 @@ class TepBaseDaemon(object):
             topic = message.topic
         else:
             topic = override_topic
-        self._mqtt_client.publish(topic=topic, payload=message.payload)
-
-    # Configuration related
-    @is_mqtt_topic("set_config")
-    def _set_config(self, config, global_config):
-        """- Launch custom set_config function
-        - Reload the daemon
-        """
-        self.logger.info("Config received for brain")
-        self.logger.debug("Config received for brain: %s", config)
-        # Set language first
-        if self.language != global_config['language']:
-            # TODO check language
-            self.language = global_config['language']
-            self.logger.info("Language %s set", self.language)
-            # Set locale
-            locale.setlocale(locale.LC_ALL, self.language + "." + locale.getpreferredencoding())
-        # Set NLU
-        if self.nlu_engine != global_config['nlu_engine']:
-            self.nlu_engine = global_config['nlu_engine']
-            self.logger.info("NLU engine `%s` set", self.nlu_engine)
-        # Set config
-        self.configured = self.set_config(config)
-        # FIXME sleep needed ???
-        time.sleep(1)
-        # TODO Implement reload or not ???
-        # Reload just restarts the `start` function
-        if self.configured:
-            self.logger.info("Reloading")
-            self._reload_needed = True
+        toto = self._mqtt_sender.publish(topic=topic, payload=message.payload, qos=qos)
 
     @is_mqtt_topic("intent_received")
     def _intent_received(self, intent_name, intent_lang, intent_file, error, state):
@@ -113,14 +93,6 @@ class TepBaseDaemon(object):
             raise TuxEatPiError("%s can not start. Error uploading intent %s: %s",
                                 self.name, intent_id, error)
 
-    def _ask_config(self):
-        """Send get_config message to the brain to get the configuration"""
-        data = {"arguments": {"component_name": self.name}}
-        topic = "brain/get_config"
-        message = Message(topic, data)
-        self.publish(message)
-        self.logger.warning("Waiting Config from the brain")
-
     # Standard mqtt topic
     @is_mqtt_topic("global/alive")
     def _alive(self, component_name, date, state):
@@ -129,7 +101,7 @@ class TepBaseDaemon(object):
             self.logger.info("NEW COMPONENT: %s", component_name)
             # Do we resend the configuration ???
         else:
-            self.logger.info("Component `%s` is %s", component_name, state)
+            self.logger.debug("Component `%s` is %s", component_name, state)
         self._component_states[component_name] = {"date": date, "state": state}
 
     @is_mqtt_topic("help")

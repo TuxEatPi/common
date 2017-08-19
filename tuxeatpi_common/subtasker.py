@@ -24,7 +24,7 @@ class SubTasker(threading.Thread):
             data = {"arguments": {"component_name": self.component.name,
                                   "date": now, "state": "ALIVE"}}
             message = Message("global/alive", data)
-            self.logger.info("Send alive request")
+            self.logger.debug("Send alive request")
             self.component.publish(message)
             yield from asyncio.sleep(15)
 
@@ -57,6 +57,8 @@ class SubTasker(threading.Thread):
         self.logger.info("Starting subtasker for %s", self.component.name)
         tasks = [self._send_alive(),
                  self._handle_component_states(),
+                 self.component.confh.monitor(),
+                 self.component.confh.monitor_global(),
                  # self._wait_for_reload(),
                  ]
         try:

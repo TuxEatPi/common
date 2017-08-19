@@ -8,6 +8,25 @@ import paho.mqtt.client as paho
 from tuxeatpi_common.error import TuxEatPiError
 
 
+class MqttSender(paho.Client):
+    """MQTT client class"""
+
+    def __init__(self, component):
+        paho.Client.__init__(self, clean_session=True, userdata=component.name)
+        self.component = component
+        self.logger = logging.getLogger(name="tep").getChild(component.name).getChild('mqttsender')
+
+    def run(self):
+        """Run MQTT client"""
+        self.connect("127.0.0.1", 1883, 60)
+        self.loop_start()
+
+    def stop(self):
+        """Stop MQTT client"""
+        self.loop_stop()
+        self.disconnect()
+
+
 class MqttClient(paho.Client):
     """MQTT client class"""
 
