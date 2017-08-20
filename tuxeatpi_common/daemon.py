@@ -1,7 +1,6 @@
 """Module defining Base Daemon for TuxEatPi daemons"""
-import locale
 import logging
-import time
+import signal
 
 from tuxeatpi_common.message import is_mqtt_topic, MqttClient, Message, MqttSender
 from tuxeatpi_common.error import TuxEatPiError
@@ -16,17 +15,14 @@ from tuxeatpi_common.intents import IntentsHandler
 class TepBaseDaemon(object):
     """Base Daemon for TuxEatPi"""
 
-    def __init__(self, daemon, name, intent_folder, dialog_folder, logging_level=logging.INFO):
+    def __init__(self, name, workdir, intent_folder, dialog_folder, logging_level=logging.INFO):
         # Get daemon
-        self.daemon = daemon
-        self.daemon.worker = self.worker
-        self.daemon.shutdown_callback = self.shutdown_callback
         # Get Name
         self.name = name
         # Folders
-        self.intent_folder = intent_folder
-        self.dialog_folder = dialog_folder
-        self.workdir = daemon.workdir
+        self.intent_folder = intent_folder  # useless
+        self.dialog_folder = dialog_folder  # useless
+        self.workdir = workdir
         # Get logger
         self.logger = None
         self.logging_level = logging_level
@@ -42,21 +38,28 @@ class TepBaseDaemon(object):
         self._tasks_thread = SubTasker(self)
         # Other component states
         self._component_states = {}
-        self.config = None
-        self.language = None
-        self.nlu_engine = None
+        self.config = None  # TODO merge with self.confh
+        self.language = None  # TODO merge with self.confh
+        self.nlu_engine = None  # TODO merge with self.confh
         self._bypass_intent_sending = False
         self._reload_needed = False
         # Intents
-        self.sent_intents = set()
+        self.sent_intents = set()  # useless
         # Dialogs
-        self.dialog_handler = DialogHandler(self.dialog_folder, self.name)
+        self.dialog_handler = DialogHandler(self.dialog_folder, self.name) # pass dialog_folder and rename to dialogs
         # Memory
         self.memh = MemoryHandler(self.name)
         # Intents
-        self.intents_handler = IntentsHandler(self)
+        self.intents_handler = IntentsHandler(self)  # pass dialog_folder and rename to intents
         # Configuration
-        self.confh = ConfigHandler(self)
+        self.confh = ConfigHandler(self)  # rename config
+        # Add signal handler
+        signal.signal(signal.SIGINT, self.signal_handler)
+
+    def signal_handler(self, signal_, frame):
+        """Signal handler"""
+        self.logger.info("Signal %s in frame %s received", signal_, frame)
+        self.shutdown()
 
     # Misc
     def _get_logger(self):
@@ -77,7 +80,7 @@ class TepBaseDaemon(object):
             topic = message.topic
         else:
             topic = override_topic
-        toto = self._mqtt_sender.publish(topic=topic, payload=message.payload, qos=qos)
+        self._mqtt_sender.publish(topic=topic, payload=message.payload, qos=qos)
 
     @is_mqtt_topic("intent_received")
     def _intent_received(self, intent_name, intent_lang, intent_file, error, state):
@@ -136,7 +139,7 @@ class TepBaseDaemon(object):
         """
         raise NotImplementedError
 
-    def worker(self):
+    def start(self):
         """Startup function for main loop"""
         self._initializer.run()
         # Start main loop
@@ -147,14 +150,8 @@ class TepBaseDaemon(object):
     @is_mqtt_topic("shutdown")
     def shutdown(self):
         """Shutdown the daemon form mqtt message"""
-        self.logger.info("Just calling common shutdown_callback method")
-        self.shutdown_callback("", "")
-
-    def shutdown_callback(self, message, code):
-        """Shutdown the daemon from command line"""
+        self.logger.info("Stopping %s", self.name)
         self._tasks_thread.stop()
         self._mqtt_client.stop()
         self._run_main_loop = False
-        self.logger.info("Stopping %s with message '%s' and code '%s'",
-                         self.name, message, code)
         self.logger.info("Stop %s", self.name)

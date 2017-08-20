@@ -1,15 +1,20 @@
+"""Module defining how to handle intents"""
 import logging
 import os
 
 import etcd
 
+from tuxeatpi_common.error import TuxEatPiError
+
 
 class IntentsHandler(object):
+    """Intents handler class"""
 
     def __init__(self, component):
         self.host = os.environ.get("TEP_ETCD_HOST", "127.0.0.1")
         self.port = int(os.environ.get("TEP_ETCD_PORT", 4001))
         self.etcd_client = etcd.Client(host=self.host, port=self.port)
+        self.root_key = "/intents"
         self.logger = logging.getLogger(name="tep").getChild(component.name).getChild('intents')
         self.folder = component.intent_folder
         self.name = component.name
@@ -33,7 +38,7 @@ class IntentsHandler(object):
                             intent_id = "/".join((intent_lang, intent_name, intent_file.name))
                             with open(intent_file.path, "rb") as mfh:
                                 intent_data = mfh.read()
-                                key = os.path.join("/intents",
+                                key = os.path.join(self.root_key,
                                                    nlu_engine,
                                                    intent_lang,
                                                    intent_name,
@@ -43,7 +48,8 @@ class IntentsHandler(object):
                                 self.logger.info("Intent %s saved", intent_id)
 
     def read(self, nlu_engine, recursive=True, wait=True):
-        key = os.path.join("/intents",
+        """Read intent in etcd"""
+        key = os.path.join(self.root_key,
                            nlu_engine,
                            )
         try:
@@ -51,44 +57,12 @@ class IntentsHandler(object):
         except etcd.EtcdWatchTimedOut:
             return
 
-    def read_pushed(self, nlu_engine, intent_name, intent_lang, component_name, intent_file):
-        key = os.path.join("/intents_pushed",
-                           nlu_engine,
-                           intent_lang,
-                           intent_name,
-                           component_name,
-                           intent_file,
-                           )
-        try:
-            return self.etcd_client.read(key)
-        except etcd.EtcdKeyNotFound:
-            return
-
-    def save_pushed(nlu_engine, intent_name, intent_lang, component_name, intent_file, intent_data):
-        key = os.path.join("/intents",
-                           nlu_engine,
-                           intent_lang,
-                           intent_name,
-                           component_name,
-                           intent_file)
-        self.etcd_client.write(key, intent_data)
-        self.logger.info("Intent pushed %s saved", intent_id)
-
-
-
     def eternal_watch(self, nlu_engine, recursive=True):
-        key = os.path.join("/intents",
+        """Watch for changes in etcd"""
+        key = os.path.join(self.root_key,
                            nlu_engine,
                            )
         try:
             return self.etcd_client.eternal_watch(key, recursive=recursive)
         except etcd.EtcdWatchTimedOut:
             return
-
-    def delete(self, nlu_engine):
-        key = os.path.join("/intents",
-                           nlu_engine,
-                           intent_lang,
-                           self.name,
-                           )
-        self.etcd_client.delete(self.key, recursive=True) 

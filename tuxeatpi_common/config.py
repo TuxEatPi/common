@@ -1,3 +1,4 @@
+"""Module defining how to handle component configuration"""
 import asyncio
 import logging
 import os
@@ -7,6 +8,7 @@ import etcd
 
 
 class ConfigHandler(object):
+    """Configuration handler class"""
 
     def __init__(self, component):
         self.component = component
@@ -18,6 +20,7 @@ class ConfigHandler(object):
         self.logger = logging.getLogger(name="tep").getChild(component.name).getChild('config')
 
     def save(self, value, key=None):
+        """Serialize (json) value and save it in etcd"""
         if key is not None:
             key = os.path.join("/config", key)
         else:
@@ -26,19 +29,28 @@ class ConfigHandler(object):
 
     @asyncio.coroutine
     def monitor(self):
+        """Watch for component configuration change in etcd
+
+        This is done by the subtaskers
+        """
         while True:
-            data = json.loads(self.etcd_client.read(self.key, wait=True, timeout=1).value)
+            raw_data = self.etcd_client.read(self.key, wait=True, timeout=1)
+            data = json.loads(raw_data.value)  # pylint: disable=E1101
             self.logger.debug("Component config changed")
             self.component.set_config(config=data)
             # TODO Implement reload or not ???
-            #self.logger.info("Reloading")
-            #self._reload_needed = True
+            # self.logger.info("Reloading")
+            # self._reload_needed = True
             yield from asyncio.sleep(1)
 
     @asyncio.coroutine
     def monitor_global(self):
+        """Watch for global configuration change in etcd
+
+        This is done by the subtaskers
+        """
         while True:
-            data = json.loads(self.etcd_client.read(self.global_key).value)
+            data = json.loads(self.etcd_client.read(self.global_key).value)  # pylint: disable=E1101
             if data.get('language') != self.component.language:
                 self.component.language = data['language']
                 self.logger.info("Language %s set", self.component.language)
@@ -54,25 +66,20 @@ class ConfigHandler(object):
             yield from asyncio.sleep(1)
 
     def read(self):
+        """Read component configuration from etcd"""
         try:
-            data = self.etcd_client.read(self.key).value
+            data = self.etcd_client.read(self.key).value  # pylint: disable=E1101
             self.component.set_config(config=json.loads(data))
             return True
         except etcd.EtcdKeyNotFound:
             return False
 
     def read_global(self):
+        """Read global configuration from etcd"""
         try:
-            data = json.loads(self.etcd_client.read(self.global_key).value)
+            data = json.loads(self.etcd_client.read(self.global_key).value)  # pylint: disable=E1101
             self.component.language = data['language']
             self.component.nlu_engine = data['nlu_engine']
             return True
         except etcd.EtcdKeyNotFound:
             return False
-
-    def delete(self, key=None):
-        if key is not None:
-            key = os.path.join("/config", key)
-        else:
-            key = self.key
-        self.etcd_client.delete(key, recursive=True) 

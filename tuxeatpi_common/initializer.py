@@ -1,10 +1,8 @@
 """Module defining the init process for TuxEatPi component"""
 import logging
-import os
 import time
 
 from tuxeatpi_common.message import Message
-from tuxeatpi_common.error import TuxEatPiError
 
 
 class Initializer():
