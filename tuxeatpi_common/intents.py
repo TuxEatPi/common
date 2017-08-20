@@ -10,21 +10,22 @@ from tuxeatpi_common.error import TuxEatPiError
 class IntentsHandler(object):
     """Intents handler class"""
 
-    def __init__(self, component):
+    def __init__(self, intent_folder, component_name):
         self.host = os.environ.get("TEP_ETCD_HOST", "127.0.0.1")
-        self.port = int(os.environ.get("TEP_ETCD_PORT", 4001))
+        self.port = int(os.environ.get("TEP_ETCD_PORT", 2379))
         self.etcd_client = etcd.Client(host=self.host, port=self.port)
         self.root_key = "/intents"
-        self.logger = logging.getLogger(name="tep").getChild(component.name).getChild('intents')
-        self.folder = component.intent_folder
-        self.name = component.name
+        self.logger = logging.getLogger(name="tep").getChild(component_name).getChild('intents')
+        self.folder = intent_folder
+        self.name = component_name
 
     def save(self, nlu_engine):
         """Save intent in etcd"""
         intent_folder = os.path.join(self.folder, nlu_engine)
         if not os.path.exists(intent_folder):
-            self.logger.warning("No intent folder found, "
-                                "intent no will be sent to the nlu engine")
+            self.logger.warning("No intent folder %s found, "
+                                "intent no will be sent to the nlu engine",
+                                intent_folder)
             return
         elif not os.path.isdir(intent_folder):
             raise TuxEatPiError("%s is not a folder", intent_folder)
@@ -47,13 +48,14 @@ class IntentsHandler(object):
                                 self.etcd_client.write(key, intent_data)
                                 self.logger.info("Intent %s saved", intent_id)
 
-    def read(self, nlu_engine, recursive=True, wait=True):
+    def read(self, nlu_engine, recursive=True, wait=True, timeout=30):
         """Read intent in etcd"""
         key = os.path.join(self.root_key,
                            nlu_engine,
                            )
         try:
-            return self.etcd_client.read(key, recursive=recursive, wait=wait)
+            return self.etcd_client.read(key, recursive=recursive,
+                                         wait=wait, timeout=timeout)
         except etcd.EtcdWatchTimedOut:
             return
 
@@ -62,7 +64,4 @@ class IntentsHandler(object):
         key = os.path.join(self.root_key,
                            nlu_engine,
                            )
-        try:
-            return self.etcd_client.eternal_watch(key, recursive=recursive)
-        except etcd.EtcdWatchTimedOut:
-            return
+        return self.etcd_client.eternal_watch(key, recursive=recursive)

@@ -57,8 +57,8 @@ class SubTasker(threading.Thread):
         self.logger.info("Starting subtasker for %s", self.component.name)
         tasks = [self._send_alive(),
                  self._handle_component_states(),
-                 self.component.confh.monitor(),
-                 self.component.confh.monitor_global(),
+                 self.component.settings.read(watch=True),
+                 self.component.settings.read_global(watch=True),
                  # self._wait_for_reload(),
                  ]
         try:
@@ -66,4 +66,3 @@ class SubTasker(threading.Thread):
         except RuntimeError:
             # Do we have to do something ?
             pass
-        self._async_loop.stop()

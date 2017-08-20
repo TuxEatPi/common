@@ -22,7 +22,7 @@ def set_daemon_class(class_object):
 
 
 @click.command()
-@click.option('--workdir', '-w', required=True, help="Working directory",
+@click.option('--workdir', '-w', required=False, help="Working directory",
               type=click.Path(exists=True, file_okay=False, dir_okay=True, readable=True,
                               writable=True))
 @click.option('--intent-folder', '-I', required=True, help="Intent folder",

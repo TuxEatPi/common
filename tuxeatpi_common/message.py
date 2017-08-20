@@ -37,10 +37,24 @@ class MqttClient(paho.Client):
     def __init__(self, component):
         paho.Client.__init__(self, clean_session=True, userdata=component.name)
         self.component = component
-        self.topics = component.topics
+        self.topics = {}
         self.logger = logging.getLogger(name="tep").getChild(component.name).getChild('mqttclient')
         self.host = os.environ.get("TEP_MQTT_HOST", "127.0.0.1")
         self.port = int(os.environ.get("TEP_MQTT_PORT", 1883))
+        self._get_topics()
+
+    def _get_topics(self):
+        """Get topics list from decorator"""
+        for attr in dir(self.component):
+            if callable(getattr(self.component, attr)):
+                method = getattr(self.component, attr)
+                if hasattr(method, "_topic_name"):
+                    if method._topic_name.startswith("global/"):
+                        topic_name = method._topic_name
+                    else:
+                        topic_name = "/".join((self.component.name, method._topic_name))
+                    self.topics[topic_name] = method.__name__
+        self.logger.debug(self.topics)
 
     def on_message(self, mqttc, obj, msg):  # pylint: disable=W0221,W0613
         """Callback on receive message"""
@@ -74,7 +88,7 @@ class MqttClient(paho.Client):
         """Run MQTT client"""
         # TODO handle reconnect
         self.connect(self.host, self.port, 60)
-        for topic_name in self.topics.keys():
+        for topic_name in self.topics:
             self.subscribe(topic_name, 0)
             self.logger.info("Subcribe to topic %s", topic_name)
         self.loop_start()

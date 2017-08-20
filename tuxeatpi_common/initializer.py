@@ -1,22 +1,24 @@
 """Module defining the init process for TuxEatPi component"""
+import asyncio
 import logging
 import time
 
 from tuxeatpi_common.message import Message
 
 
-class Initializer():
+class Initializer(object):
     """Initializer class to run init action for a component"""
 
-    def __init__(self, component):
+    def __init__(self, component, skip_dialogs=False, skip_intents=False, skip_settings=False):
         self.component = component
+        self.skip_dialogs = skip_dialogs
+        self.skip_intents = skip_intents
+        self.skip_settings = skip_settings
         self.logger = logging.getLogger(name="tep").getChild(component.name).getChild('initializer')
 
     def run(self):
         """Run initialization"""
         self.logger.info("Starting initialize process")
-        # Get topics to subscribe
-        self._get_topics()
         # start mqtt client
         self.component._mqtt_client.run()
         self.component._mqtt_sender.run()
@@ -28,33 +30,18 @@ class Initializer():
         self.logger.info("Send alive request")
         self.component.publish(message)
         # Load dialogs
-        self.component.dialog_handler.load()
-        # Get First configuration
-        while not self.component.confh.read_global():
-            self.logger.warning("No global config received, retrying in 5 seconds...")
-            time.sleep(5)
-        self.logger.info("Global config received")
-        while not self.component.confh.read():
-            self.logger.warning("No component config received, retrying in 5 seconds...")
-            time.sleep(5)
-            self.component.config = self.component.confh.read()
-        self.logger.info("Component config received")
+        if not self.skip_dialogs:
+            self.component.dialogs.load()
+        # Get settings
+        if not self.skip_settings:
+            loop = self.component._async_loop
+            tasks = [self.component.settings.read(),
+                     self.component.settings.read_global(),
+                     ]
+            loop.run_until_complete(asyncio.wait(tasks))
+            self.logger.info("Global and component settings received")
         # Send intent files
-        if not self.component._bypass_intent_sending:
-            self.component.intents_handler.save(self.component.nlu_engine)
-
+        if not self.skip_intents:
+            self.component.intents.save(self.component.settings.nlu_engine)
         # Start subtasker
         self.component._tasks_thread.start()
-
-    def _get_topics(self):
-        """Get topics list from decorator"""
-        for attr in dir(self.component):
-            if callable(getattr(self.component, attr)):
-                method = getattr(self.component, attr)
-                if hasattr(method, "_topic_name"):
-                    if method._topic_name.startswith("global/"):
-                        topic_name = method._topic_name
-                    else:
-                        topic_name = "/".join((self.component.name, method._topic_name))
-                    self.component.topics[topic_name] = method.__name__
-        self.logger.debug(self.component.topics)

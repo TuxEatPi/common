@@ -4,6 +4,12 @@ jobs:
     docker:
       - image: circleci/python:3.6.1
       - image: eclipse-mosquitto:latest
+      - image: quay.io/coreos/etcd
+        command: 
+        - /usr/local/bin/etcd
+        - --data-dir=/etcd-data
+        - --listen-client-urls=http://0.0.0.0:2379
+        - --advertise-client-urls=http://127.0.0.1:2379
     working_directory: ~/repo
     steps:
       - checkout
