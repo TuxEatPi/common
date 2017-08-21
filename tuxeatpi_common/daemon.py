@@ -133,5 +133,5 @@ class TepBaseDaemon(object):
         self._tasks_thread.stop()
         self._mqtt_client.stop()
         self._run_main_loop = False
-        self._async_loop.stop()
+        # self._async_loop.stop()
         self.logger.info("Stop %s", self.name)

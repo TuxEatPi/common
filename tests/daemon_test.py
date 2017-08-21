@@ -82,38 +82,3 @@ class TestDaemon(object):
         assert self.fake_daemon.settings.nlu_engine == "nlu_test2"
         assert self.fake_daemon.args1 == "value2"
         assert self.fake_daemon.settings.params == {"param1": "value2"}
-
-
-
-
-
-
-
-
-
-
-    @pytest.mark.skip
-    def test_mqtt(self):
-        # Start
-        t = threading.Thread(target=self.fake_daemon.start)
-        t = t.start()
-        # Waiting 2 seconds for send config
-        time.sleep(2)
-        return
-        # Waiting for set_config called
-        assert self.fake_daemon.settings.language == 'en_US'
-        assert self.fake_daemon.args1 == 'value1'
-        assert self.fake_daemon.started is True
-        # Send message overiding topic
-        topic = "fakedaemon/bad_topic"
-        data = {"arguments": {"config": {"arg1": "value2"},
-                              "global_config": {"language": "fr_FR", "nlu_engine": "mix"}}}
-        message = Message(topic, data)
-        self.fake_daemon.publish(message, "fakedaemon/set_config")
-        time.sleep(1)
-        assert self.fake_daemon.settings.language == 'fr_FR'
-        assert self.fake_daemon.args1 == 'value2'
-        # Bad message
-        with pytest.raises(TuxEatPiError) as exp:
-            self.fake_daemon.publish("message")
-        assert str(exp.value) == "message must be a Message object"
