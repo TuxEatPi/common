@@ -15,11 +15,10 @@ dev-pyenv:
 #######################################
 doc-update-refs:
 	rm -rf doc/source/refs/
-	sphinx-apidoc -M -f -e -o doc/source/refs/ tuxeatpi/
+	sphinx-apidoc -M -f -e -o doc/source/refs/ tuxeatpi_common/
 
 doc-generate:
 	cd doc && make html
-	touch doc/build/html/.nojekyll
 
 #######################################
 ### Localization
