@@ -11,6 +11,7 @@ from tuxeatpi_common.initializer import Initializer
 from tuxeatpi_common.memory import MemoryHandler
 from tuxeatpi_common.settings import SettingsHandler
 from tuxeatpi_common.intents import IntentsHandler
+from tuxeatpi_common.registry import RegistryHandler
 
 
 class TepBaseDaemon(object):
@@ -20,6 +21,7 @@ class TepBaseDaemon(object):
         self._async_loop = asyncio.get_event_loop()
         # Get Name
         self.name = name
+        self.version = "0.0.0"
         # Folders
         self.workdir = workdir
         # Get logger
@@ -46,6 +48,8 @@ class TepBaseDaemon(object):
         self.intents = IntentsHandler(intents_folder, self.name)
         # Settings
         self.settings = SettingsHandler(self)
+        # Registry
+        self.registry = RegistryHandler(self.name, self.version)
         # Add signal handler
         signal.signal(signal.SIGINT, self.signal_handler)
 
@@ -76,16 +80,6 @@ class TepBaseDaemon(object):
         self._mqtt_sender.publish(topic=topic, payload=message.payload, qos=qos)
 
     # Standard mqtt topic
-    @is_mqtt_topic("global/alive")
-    def _alive(self, component_name, date, state):
-        """Return help for this daemon"""
-        if component_name not in self._component_states:
-            self.logger.info("NEW COMPONENT: %s", component_name)
-            # Do we resend the configuration ???
-        else:
-            self.logger.debug("Component `%s` is %s", component_name, state)
-        self._component_states[component_name] = {"date": date, "state": state}
-
     @is_mqtt_topic("help")
     def help_(self):
         """Return help for this daemon"""
