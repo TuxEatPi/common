@@ -20,7 +20,7 @@ class SettingsHandler(object):
         # TODO use only one client !!
         self.etcd_sender = etcd.Client(host=self.host, port=self.port)
         self.etcd_client = aio_etcd.Client(host=self.host, port=self.port)
-        self.logger = logging.getLogger(name="tep").getChild(component.name).getChild('config')
+        self.logger = logging.getLogger(name="tep").getChild(component.name).getChild('settings')
         self.language = None
         self.nlu_engine = None
         self.params = {}
