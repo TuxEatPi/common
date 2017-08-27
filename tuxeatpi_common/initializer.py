@@ -1,9 +1,6 @@
 """Module defining the init process for TuxEatPi component"""
 import asyncio
 import logging
-import time
-
-from tuxeatpi_common.message import Message
 
 
 class Initializer(object):
@@ -22,13 +19,6 @@ class Initializer(object):
         # start mqtt client
         self.component._mqtt_client.run()
         self.component._mqtt_sender.run()
-        # Send first alive request
-        # TODO Add state to alive request
-        now = time.time()
-        data = {"arguments": {"component_name": self.component.name, "date": now, "state": "INIT"}}
-        message = Message("global/alive", data)
-        self.logger.info("Send alive request")
-        self.component.publish(message)
         # Load dialogs
         if not self.skip_dialogs:
             self.component.dialogs.load()
