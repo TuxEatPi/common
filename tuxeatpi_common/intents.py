@@ -4,6 +4,7 @@ import os
 
 import etcd
 
+from tuxeatpi_common.etcd_client import get_etcd_client
 from tuxeatpi_common.error import TuxEatPiError
 
 
@@ -13,7 +14,7 @@ class IntentsHandler(object):
     def __init__(self, intent_folder, component_name):
         self.host = os.environ.get("TEP_ETCD_HOST", "127.0.0.1")
         self.port = int(os.environ.get("TEP_ETCD_PORT", 2379))
-        self.etcd_client = etcd.Client(host=self.host, port=self.port)
+        self.etcd_client = get_etcd_client(host=self.host, port=self.port)
         self.root_key = "/intents"
         self.logger = logging.getLogger(name="tep").getChild(component_name).getChild('intents')
         self.folder = intent_folder

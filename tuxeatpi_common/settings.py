@@ -4,8 +4,10 @@ import logging
 import os
 import json
 
-import aio_etcd
 import etcd
+
+from tuxeatpi_common.etcd_client import get_etcd_client
+from tuxeatpi_common.etcd_client import get_aioetcd_client
 
 
 class SettingsHandler(object):
@@ -18,8 +20,8 @@ class SettingsHandler(object):
         self.host = os.environ.get("TEP_ETCD_HOST", "127.0.0.1")
         self.port = int(os.environ.get("TEP_ETCD_PORT", 2379))
         # TODO use only one client !!
-        self.etcd_sender = etcd.Client(host=self.host, port=self.port)
-        self.etcd_client = aio_etcd.Client(host=self.host, port=self.port)
+        self.etcd_sender = get_etcd_client(host=self.host, port=self.port)
+        self.etcd_client = get_aioetcd_client(host=self.host, port=self.port)
         self.logger = logging.getLogger(name="tep").getChild(component.name).getChild('settings')
         self.language = None
         self.nlu_engine = None

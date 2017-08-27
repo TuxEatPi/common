@@ -27,4 +27,4 @@ class TestRegistry(object):
 
         registry_test.clear()
         states = registry_test.read()
-        assert states is None
+        assert states == {}

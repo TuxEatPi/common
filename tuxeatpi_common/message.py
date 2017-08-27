@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import time
 
 import paho.mqtt.client as paho
 
@@ -87,7 +88,14 @@ class MqttClient(paho.Client):
     def run(self):
         """Run MQTT client"""
         # TODO handle reconnect
-        self.connect(self.host, self.port, 60)
+        while True:
+            try:
+                self.connect(self.host, self.port, 60)
+                break
+            except ConnectionRefusedError:
+                self.logger.warning("Can not connect to etcd server, retrying in 5 seconds")
+                time.sleep(5)
+
         for topic_name in self.topics:
             self.subscribe(topic_name, 0)
             self.logger.info("Subcribe to topic %s", topic_name)

@@ -4,6 +4,8 @@ import os
 
 import etcd
 
+from tuxeatpi_common.etcd_client import get_etcd_client
+
 
 class MemoryHandler(object):
     """Memory handler class"""
@@ -12,7 +14,7 @@ class MemoryHandler(object):
         self.root_key = os.path.join("/memory", component_name)
         self.host = os.environ.get("TEP_ETCD_HOST", "127.0.0.1")
         self.port = int(os.environ.get("TEP_ETCD_PORT", 2379))
-        self.etcd_client = etcd.Client(host=self.host, port=self.port)
+        self.etcd_client = get_etcd_client(host=self.host, port=self.port)
 
     def save(self, key, value):
         """Save something in memory"""
