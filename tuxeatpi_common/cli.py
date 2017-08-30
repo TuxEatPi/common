@@ -1,6 +1,6 @@
 """TuxEatPi Base Main module"""
-
 import os
+import sys
 
 import click
 from setproctitle import setproctitle  # pylint: disable=E0611
@@ -34,13 +34,11 @@ def main_cli(workdir, intent_folder, dialog_folder, **kwargs):
     # Get workdir
     if workdir is None:
         workdir = os.getcwd()
-    prog_name = DAEMON_CLASS.__name__.lower()
-    if not prog_name.startswith("tep-"):
-        proc_title = "tep-" + prog_name
-    else:
-        proc_title = prog_name
+    # Set proc_title
+    proc_title = os.path.basename(sys.argv[0])
     setproctitle(proc_title)
     # Standard preparation
+    prog_name = DAEMON_CLASS.__name__.lower()
     tep_daemon = DAEMON_CLASS(prog_name, workdir, intent_folder, dialog_folder, **kwargs)
     # Run the deamon
     tep_daemon.start()

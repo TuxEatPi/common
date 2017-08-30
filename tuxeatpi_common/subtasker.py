@@ -16,9 +16,15 @@ class SubTasker(threading.Thread):
     @asyncio.coroutine
     def _send_alive(self):
         """Send alive request every 15 seconds"""
+        # TODO improve me
+        wait_count = 15
         while True:
-            self.component.registry.ping()
-            yield from asyncio.sleep(15)
+            if wait_count < 15:
+                wait_count += 1
+                yield from asyncio.sleep(1)
+            else:
+                self.component.registry.ping()
+                wait_count = 0
 
     # @asyncio.coroutine
     # def _wait_for_reload(self):
