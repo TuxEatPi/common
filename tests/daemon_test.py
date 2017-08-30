@@ -9,7 +9,7 @@ import logging
 import pytest
 
 
-from tuxeatpi_common.message import Message
+from tuxeatpi_common.message import Message, is_mqtt_topic
 from tuxeatpi_common.daemon import TepBaseDaemon
 from tuxeatpi_common.error import TuxEatPiError
 
@@ -23,6 +23,7 @@ class FakeDaemon(TepBaseDaemon):
         TepBaseDaemon.__init__(self, name, workdir, intent_folder, dialog_folder, logging_level)
         self.args1 = None
         self.started = False
+        self.help_arg = None
 
     def set_config(self, config):
         self.args1 = config.get("param1")
@@ -31,6 +32,14 @@ class FakeDaemon(TepBaseDaemon):
     def main_loop(self):
         self.started = "OK"
         time.sleep(1)
+
+    @is_mqtt_topic("help")
+    def help_(self, help_arg):
+        try:
+            super(FakeDaemon, self).help_()
+        except NotImplementedError:
+            pass
+        self.help_arg = help_arg
 
 
 class TestDaemon(object):
@@ -51,7 +60,7 @@ class TestDaemon(object):
         self.fake_daemon.shutdown()
 
     @pytest.mark.run_loop
-    def test_daemon(self):
+    def test_daemon(self, capsys):
         # Start
         self.fake_daemon._run_main_loop = False
         t = threading.Thread(target=self.fake_daemon.start)
@@ -68,6 +77,23 @@ class TestDaemon(object):
         # check first config
         assert self.fake_daemon.settings.language == "en_US"
         assert self.fake_daemon.settings.nlu_engine == "nlu_test"
+
+        # Get dialog test
+        dialog_rendered = self.fake_daemon.get_dialog("render_test", test="mytest")
+        assert dialog_rendered == "This is a rendering test mytest"
+
+        # Publish Messages
+        message = Message("fake_daemon/help", {"arguments": {"help_arg": "test1"}})
+        self.fake_daemon.publish(message)
+        time.sleep(2)
+        assert self.fake_daemon.help_arg == "test1"
+        # Publish Messages override
+        message = Message("fake_daemon/help", {"arguments": {"help_arg": "test2"}})
+        self.fake_daemon.publish(message, override_topic="fake_daemon/help")
+        time.sleep(1)
+        assert self.fake_daemon.help_arg == "test2"
+
+
         # Set component config
         # checkcomponent config
         assert self.fake_daemon.args1 == "value1"
@@ -82,3 +108,6 @@ class TestDaemon(object):
         assert self.fake_daemon.settings.nlu_engine == "nlu_test2"
         assert self.fake_daemon.args1 == "value2"
         assert self.fake_daemon.settings.params == {"param1": "value2"}
+
+        # TODO capture logging output
+        self.fake_daemon.reload()

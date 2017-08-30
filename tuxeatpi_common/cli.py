@@ -35,7 +35,7 @@ def main_cli(workdir, intent_folder, dialog_folder, **kwargs):
     if workdir is None:
         workdir = os.getcwd()
     prog_name = DAEMON_CLASS.__name__.lower()
-    if not prog_name.startswith("tep"):
+    if not prog_name.startswith("tep-"):
         proc_title = "tep-" + prog_name
     else:
         proc_title = prog_name

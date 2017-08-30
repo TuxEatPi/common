@@ -92,7 +92,7 @@ class TepBaseDaemon(object):
 
     def get_dialog(self, key, **kwargs):
         """Get dialog and render it"""
-        return self.dialogs.get_dialog(self.config.language, key, **kwargs)
+        return self.dialogs.get_dialog(self.settings.language, key, **kwargs)
 
     def set_config(self, config):
         """Save the configuration and reload the daemon

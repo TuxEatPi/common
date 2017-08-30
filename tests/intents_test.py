@@ -54,4 +54,3 @@ class TestBadIntents(object):
         intents_test = IntentsHandler("tests/badintents", "test_intents")
         ret = intents_test.save("nlu_test")
         assert ret is None
-
