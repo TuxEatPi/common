@@ -28,7 +28,7 @@ class RegistryHandler(object):
                 "version": self.version,
                 "date": time.time(),
                 "state": state}
-        self.logger.info("Send ping")
+        self.logger.debug("Send ping")
         self.etcd_client.write(self.key, json.dumps(data))
 
     def read(self):
