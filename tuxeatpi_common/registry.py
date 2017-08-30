@@ -35,7 +35,7 @@ class RegistryHandler(object):
         """Get all component states"""
         states = {}
         try:
-            for raw_data in self.etcd_client.read(self.key).children:
+            for raw_data in self.etcd_client.read(self.root_key).children:
                 data = json.loads(raw_data.value)
                 states[data['name']] = data
         except etcd.EtcdKeyNotFound:
