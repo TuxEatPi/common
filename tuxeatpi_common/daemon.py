@@ -124,6 +124,7 @@ class TepBaseDaemon(object):
     def shutdown(self):
         """Shutdown the daemon form mqtt message"""
         self.logger.info("Stopping %s", self.name)
+        self.settings.stop()
         self._tasks_thread.stop()
         self._mqtt_client.stop()
         self._run_main_loop = False

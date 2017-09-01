@@ -27,6 +27,7 @@ class SettingsHandler(object):
         self.language = None
         self.nlu_engine = None
         self.params = {}
+        self._wait_config = True
 
     def save(self, value, key=None):
         """Serialize (json) value and save it in etcd"""
@@ -48,12 +49,17 @@ class SettingsHandler(object):
         except etcd.EtcdKeyNotFound:
             pass
 
+    def stop(self):
+        """Stop waiting for settings"""
+        self.logger.info("Stopping settings")
+        self._wait_config = False
+
     async def read(self, watch=False):
         """Watch for component settings change in etcd
 
         This is done by the subtaskers
         """
-        while True:
+        while self._wait_config:
             try:
                 raw_data = await self.etcd_client.read(self.key, wait=watch)
             except aio_etcd.EtcdKeyNotFound:
@@ -75,7 +81,7 @@ class SettingsHandler(object):
 
         This is done by the subtaskers
         """
-        while True:
+        while self._wait_config:
             try:
                 raw_data = await self.etcd_client.read(self.global_key, wait=watch)
             except aio_etcd.EtcdKeyNotFound:
