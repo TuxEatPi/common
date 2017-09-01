@@ -5,6 +5,7 @@ import os
 import json
 
 import etcd
+import aio_etcd
 
 from tuxeatpi_common.etcd_client import get_etcd_client
 from tuxeatpi_common.etcd_client import get_aioetcd_client
@@ -55,7 +56,7 @@ class SettingsHandler(object):
         while True:
             try:
                 raw_data = await self.etcd_client.read(self.key, wait=watch)
-            except etcd.EtcdKeyNotFound:
+            except aio_etcd.EtcdKeyNotFound:
                 self.logger.info("Component settings not found, waiting")
                 await asyncio.sleep(3)
                 continue
@@ -77,7 +78,7 @@ class SettingsHandler(object):
         while True:
             try:
                 raw_data = await self.etcd_client.read(self.global_key, wait=watch)
-            except etcd.EtcdKeyNotFound:
+            except aio_etcd.EtcdKeyNotFound:
                 self.logger.info("Global settings not found, waiting")
                 await asyncio.sleep(3)
                 continue

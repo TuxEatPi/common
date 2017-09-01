@@ -53,4 +53,7 @@ class RegistryHandler(object):
 
     def clear(self):
         """Remove all entries in the registry"""
-        self.etcd_client.delete(self.root_key, recursive=True)
+        try:
+            self.etcd_client.delete(self.root_key, recursive=True)
+        except etcd.EtcdKeyNotFound:
+            pass
