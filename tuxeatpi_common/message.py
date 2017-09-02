@@ -93,7 +93,7 @@ class MqttClient(paho.Client):
                 self.connect(self.host, self.port, 60)
                 break
             except ConnectionRefusedError:
-                self.logger.warning("Can not connect to etcd server, retrying in 5 seconds")
+                self.logger.warning("Can not connect to mqtt server, retrying in 5 seconds")
                 time.sleep(5)
 
         for topic_name in self.topics:
