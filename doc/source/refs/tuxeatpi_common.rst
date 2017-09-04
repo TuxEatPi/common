@@ -15,10 +15,12 @@ Submodules
    tuxeatpi_common.daemon
    tuxeatpi_common.dialogs
    tuxeatpi_common.error
+   tuxeatpi_common.etcd_client
    tuxeatpi_common.initializer
    tuxeatpi_common.intents
    tuxeatpi_common.memory
    tuxeatpi_common.message
+   tuxeatpi_common.registry
    tuxeatpi_common.settings
    tuxeatpi_common.subtasker
 
