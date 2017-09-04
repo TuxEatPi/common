@@ -37,6 +37,7 @@ class MqttClient(paho.Client):
 
     def __init__(self, component):
         paho.Client.__init__(self, clean_session=True, userdata=component.name)
+        self._must_run = True
         self.component = component
         self.topics = {}
         self.logger = logging.getLogger(name="tep").getChild(component.name).getChild('mqttclient')
@@ -88,7 +89,7 @@ class MqttClient(paho.Client):
     def run(self):
         """Run MQTT client"""
         # TODO handle reconnect
-        while True:
+        while self._must_run:
             try:
                 self.connect(self.host, self.port, 60)
                 break
@@ -103,6 +104,7 @@ class MqttClient(paho.Client):
 
     def stop(self):
         """Stop MQTT client"""
+        self._must_run = False
         self.loop_stop()
         self.disconnect()
 
