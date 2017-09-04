@@ -37,7 +37,7 @@ class EtcdWrapper(object):
         # Get sync client receiver
         while True:
             try:
-                etcd_client = etcd.Client(self.host, self.port)
+                etcd_client = etcd.Client(self.host, self.port, allow_reconnect=True)
                 # Test connection
                 etcd_client.cluster_version  # pylint: disable=W0104
                 # Save client
@@ -49,7 +49,7 @@ class EtcdWrapper(object):
         # Get sync client sender
         while True:
             try:
-                etcd_sender = etcd.Client(self.host, self.port)
+                etcd_sender = etcd.Client(self.host, self.port, allow_reconnect=True)
                 # Test connection
                 etcd_sender.cluster_version  # pylint: disable=W0104
                 # Save client
@@ -59,7 +59,7 @@ class EtcdWrapper(object):
                 self.logger.warning("Can not connect to etcd server, retrying in 5 seconds")
                 time.sleep(5)
         # Get async etcd client
-        self.async_client = aio_etcd.Client(self.host, self.port)
+        self.async_client = aio_etcd.Client(self.host, self.port, allow_reconnect=True)
 
     def read(self, key, recursive=False, wait=False, timeout=60):
         """Sync Etcd read operation"""
