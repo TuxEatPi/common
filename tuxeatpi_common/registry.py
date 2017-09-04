@@ -4,22 +4,16 @@ import logging
 import os
 import time
 
-import etcd
-
-from tuxeatpi_common.etcd_client import get_etcd_client
-
 
 class RegistryHandler(object):
     """Registry handler class"""
 
-    def __init__(self, component_name, component_version):
+    def __init__(self, component_name, component_version, etcd_wrapper):
         self.root_key = "/registry"
         self.name = component_name
         self.version = component_version
         self.key = os.path.join(self.root_key, component_name)
-        self.host = os.environ.get("TEP_ETCD_HOST", "127.0.0.1")
-        self.port = int(os.environ.get("TEP_ETCD_PORT", 2379))
-        self.etcd_client = get_etcd_client(host=self.host, port=self.port)
+        self.etcd_wrapper = etcd_wrapper
         self.logger = logging.getLogger(name="tep").getChild(component_name).getChild('register')
 
     def ping(self, state="ALIVE"):
@@ -29,18 +23,18 @@ class RegistryHandler(object):
                 "date": time.time(),
                 "state": state}
         self.logger.debug("Send ping")
-        self.etcd_client.write(self.key, json.dumps(data))
+        self.etcd_wrapper.write(self.key, data)
 
     def read(self):
         """Get all component states"""
         states = {}
-        try:
-            for raw_data in self.etcd_client.read(self.root_key).children:
-                data = json.loads(raw_data.value)
-                states[data['name']] = data
-        except etcd.EtcdKeyNotFound:
+        etcd_data = self.etcd_wrapper.read(self.root_key)
+        if etcd_data is None:
             self.logger.warning("Registry folder not found in Etcd")
             return {}
+        for raw_data in etcd_data.children:
+            data = json.loads(raw_data.value)
+            states[data['name']] = data
         return states
 
     def set_notalive(self, data):
@@ -49,11 +43,8 @@ class RegistryHandler(object):
         data['state'] = "NOT ALIVE"
         data['date'] = time.time()
         key = os.path.join(self.root_key, data['name'])
-        self.etcd_client.write(key, json.dumps(data))
+        self.etcd_wrapper.write(key, data)
 
     def clear(self):
         """Remove all entries in the registry"""
-        try:
-            self.etcd_client.delete(self.root_key, recursive=True)
-        except etcd.EtcdKeyNotFound:
-            pass
+        self.etcd_wrapper.delete(self.root_key, recursive=True)

@@ -12,6 +12,7 @@ from tuxeatpi_common.memory import MemoryHandler
 from tuxeatpi_common.settings import SettingsHandler
 from tuxeatpi_common.intents import IntentsHandler
 from tuxeatpi_common.registry import RegistryHandler
+from tuxeatpi_common.etcd_client import EtcdWrapper
 
 
 class TepBaseDaemon(object):
@@ -36,6 +37,10 @@ class TepBaseDaemon(object):
         self._mqtt_sender = MqttSender(self)
         # Set the main loop to ON
         self._run_main_loop = True
+        # Etcd
+        etcd_host = None
+        etcd_port = None
+        self.etcd_wrapper = EtcdWrapper(etcd_host, etcd_port)
         # Initializer
         self._initializer = Initializer(self)
         # SubTasker
@@ -43,13 +48,13 @@ class TepBaseDaemon(object):
         # Dialogs
         self.dialogs = DialogsHandler(dialog_folder, self.name)
         # Memory
-        self.memory = MemoryHandler(self.name)
+        self.memory = MemoryHandler(self.name, self.etcd_wrapper)
         # Intents
-        self.intents = IntentsHandler(intents_folder, self.name)
+        self.intents = IntentsHandler(intents_folder, self.name, self.etcd_wrapper)
         # Settings
         self.settings = SettingsHandler(self)
         # Registry
-        self.registry = RegistryHandler(self.name, self.version)
+        self.registry = RegistryHandler(self.name, self.version, self.etcd_wrapper)
         # Add signal handler
         signal.signal(signal.SIGINT, self.signal_handler)
 

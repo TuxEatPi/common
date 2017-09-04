@@ -6,15 +6,18 @@ import logging
 
 import pytest
 
-from tuxeatpi_common.error import TuxEatPiError
 from tuxeatpi_common.memory import MemoryHandler
+from tuxeatpi_common.etcd_client import EtcdWrapper
 
 
 class TestMemory(object):
 
     def test_memory(self):
         # Create bad message
-        memory_test = MemoryHandler("test_memory")
+        etcd_host = "127.0.0.1"
+        etcd_port = 2379
+        self.etcd_wrapper = EtcdWrapper(etcd_host, etcd_port)
+        memory_test = MemoryHandler("test_memory", self.etcd_wrapper)
         key = "mykey"
         value = "myvalue"
         memory_test.save(key, value)
@@ -25,4 +28,4 @@ class TestMemory(object):
         memory_test.delete(key)
 
         resp = memory_test.read(key)
-        assert resp is None
+        assert resp == {}
