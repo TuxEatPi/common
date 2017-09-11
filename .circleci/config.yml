@@ -1,6 +1,19 @@
+# Workflow
+workflows:
+  version: 2
+  test__trigger:
+    jobs:
+      - test
+      - trigger_components:
+          requires:
+            - test
+          filters:
+            branches:
+              only: master
+
 version: 2
 jobs:
-  build:
+  test:
     docker:
       - image: circleci/python:3.6.1
       - image: eclipse-mosquitto:latest
@@ -36,6 +49,10 @@ jobs:
           name: run tests
           command: |
             . venv/bin/activate
+            sudo bash -c "echo 'en_US.UTF-8 UTF-8'>> /etc/locale.gen"
+            sudo bash -c "echo 'fr_FR.UTF-8 UTF-8' >> /etc/locale.gen"
+            sudo locale-gen
+            locale -a
             python setup.py develop
             pycodestyle --max-line-length=100 tuxeatpi_common
             pylint --rcfile=.pylintrc -r no tuxeatpi_common
@@ -48,3 +65,18 @@ jobs:
       # Useless for now waiting for update from circleCI UI
       - store_test_results:
           path: pytest/
+   # Missing circle workflow api
+  trigger_components:
+    docker:
+      - image: circleci/python:3.6.1
+    working_directory: ~/repo
+    steps:
+      - run:
+          name: trigger components
+          command: |
+            curl -X POST https://circleci.com/api/v1.1/project/github/TuxEatPi/brain/`curl          -X GET https://circleci.com/api/v1.1/project/github/TuxEatPi/brain/tree/master?circle-token=$CIRCLE_TOKEN          |jq '.[0].build_num'`/retry?circle-token=$CIRCLE_TOKEN
+            curl -X POST https://circleci.com/api/v1.1/project/github/TuxEatPi/hotword-kittai/`curl -X GET https://circleci.com/api/v1.1/project/github/TuxEatPi/hotword-kittai/tree/master?circle-token=$CIRCLE_TOKEN |jq '.[0].build_num'`/retry?circle-token=$CIRCLE_TOKEN
+            curl -X POST https://circleci.com/api/v1.1/project/github/TuxEatPi/speech-nuance/`curl  -X GET https://circleci.com/api/v1.1/project/github/TuxEatPi/speech-nuance/tree/master?circle-token=$CIRCLE_TOKEN  |jq '.[0].build_num'`/retry?circle-token=$CIRCLE_TOKEN
+            curl -X POST https://circleci.com/api/v1.1/project/github/TuxEatPi/nlu-nuance/`curl     -X GET https://circleci.com/api/v1.1/project/github/TuxEatPi/nlu-nuance/tree/master?circle-token=$CIRCLE_TOKEN     |jq '.[0].build_num'`/retry?circle-token=$CIRCLE_TOKEN
+            curl -X POST https://circleci.com/api/v1.1/project/github/TuxEatPi/time/`curl           -X GET https://circleci.com/api/v1.1/project/github/TuxEatPi/time/tree/master?circle-token=$CIRCLE_TOKEN           |jq '.[0].build_num'`/retry?circle-token=$CIRCLE_TOKEN
+            #curl -X POST https://circleci.com/api/v1.1/project/github/TuxEatPi/being/`curl          -X GET https://circleci.com/api/v1.1/project/github/TuxEatPi/being/tree/master?circle-token=$CIRCLE_TOKEN           |jq '.[0].build_num'`/retry?circle-token=$CIRCLE_TOKEN

@@ -3,6 +3,7 @@ import asyncio
 import logging
 import os
 import json
+import locale
 
 
 class SettingsHandler(object):
@@ -79,6 +80,9 @@ class SettingsHandler(object):
             if data.get('language') != self.language:
                 self.language = data['language']
                 self.logger.info("Language %s set", self.language)
+                # Set locale
+                encoding = locale.getlocale()[1]
+                locale.setlocale(locale.LC_ALL, (self.language, encoding))
                 # TODO Implement reload or not ???
                 self._reload_needed = True
                 self.logger.info("Reloading")

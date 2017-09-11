@@ -43,7 +43,9 @@ class EtcdWrapper(object):
                 # Save client
                 self.sync_client = etcd_client
                 break
-            except (etcd.EtcdConnectionFailed, urllib3.exceptions.MaxRetryError):
+            except (etcd.EtcdConnectionFailed,
+                    urllib3.exceptions.MaxRetryError,
+                    etcd.EtcdException):
                 self.logger.warning("Can not connect to etcd server, retrying in 5 seconds")
                 time.sleep(5)
         # Get sync client sender
@@ -55,7 +57,9 @@ class EtcdWrapper(object):
                 # Save client
                 self.sync_sender = etcd_sender
                 break
-            except (etcd.EtcdConnectionFailed, urllib3.exceptions.MaxRetryError):
+            except (etcd.EtcdConnectionFailed,
+                    urllib3.exceptions.MaxRetryError,
+                    etcd.EtcdException):
                 self.logger.warning("Can not connect to etcd server, retrying in 5 seconds")
                 time.sleep(5)
         # Get async etcd client
