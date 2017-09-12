@@ -21,28 +21,24 @@ doc-generate:
 	cd doc && make html
 
 #######################################
-### Localization
+### Docker targets
 #######################################
-lang-scan:
-	pygettext3.5 --output-dir=tuxeatpi/locale/  -k gtt -va -x tuxeatpi/libs/lang.py tuxeatpi/*.py tuxeatpi/*/*.py tuxeatpi/*/*/*.py
-	cd tuxeatpi/locale && msgmerge --update --no-fuzzy-matching --backup=off en/LC_MESSAGES/tuxeatpi.po messages.pot
-	cd tuxeatpi/locale && msgmerge --update --no-fuzzy-matching --backup=off fr/LC_MESSAGES/tuxeatpi.po messages.pot
+docker_common_build:
+	docker build -t tuxeatpi_common -f misc/docker/common/Dockerfile .
 
-lang-gen:
-	cd tuxeatpi/locale/fr/LC_MESSAGES/ && msgfmt tuxeatpi.po -o tuxeatpi.mo
-	cd tuxeatpi/locale/en/LC_MESSAGES/ && msgfmt tuxeatpi.po -o tuxeatpi.mo
+docker_common_irun:
+	docker run -it --rm tuxeatpi_common bash
 
-set-locales:
-	sudo sed -i 's/# \(en_US.UTF-8 .*\)/\1/g' /etc/locale.gen
-	sudo sed -i 's/# \(en_CA.UTF-8 .*\)/\1/g' /etc/locale.gen
-	sudo sed -i 's/# \(fr_FR.UTF-8 .*\)/\1/g' /etc/locale.gen
-	sudo sed -i 's/# \(fr_CA.UTF-8 .*\)/\1/g' /etc/locale.gen
-	sudo locale-gen
+docker_pulseaudio_build:
+	docker build -t tuxeatpi_pulseaudio -f misc/docker/pulseaudio/Dockerfile .
+
+docker_pulseaudio_irun:
+	docker run -it --rm tuxeatpi_pulseaudio bash
+
 
 #######################################
 ### Test targets
 #######################################
-
 test-run: test-syntax test-pytest
 
 test-syntax:

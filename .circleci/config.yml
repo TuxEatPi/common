@@ -4,9 +4,16 @@ workflows:
   test__trigger:
     jobs:
       - test
-      - trigger_components:
+      - docker_build_common:
           requires:
             - test
+      - docker_build_common_pulseaudio:
+          requires:
+            - docker_build_common
+      - trigger_components:
+          requires:
+            - docker_build_common
+            - docker_build_common_pulseaudio
           filters:
             branches:
               only: master
@@ -65,6 +72,32 @@ jobs:
       # Useless for now waiting for update from circleCI UI
       - store_test_results:
           path: pytest/
+  docker_build_common:
+    docker:
+      - image: docker:17.05.0-ce-git
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build Docker based image
+          command: |
+            docker build -t tuxeatpi/common:latest -f misc/docker/common/Dockerfile .
+            docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWORD
+            docker push tuxeatpi/common:latest
+  docker_build_common_pulseaudio:
+    docker:
+      - image: docker:17.05.0-ce-git
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build Docker pulseaudio image
+          command: |
+            docker build -t tuxeatpi/pulseaudio:latest -f misc/docker/pulseaudio/Dockerfile .
+            docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASSWORD
+            docker push tuxeatpi/pulseaudio:latest
    # Missing circle workflow api
   trigger_components:
     docker:
