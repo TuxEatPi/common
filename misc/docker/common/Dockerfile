@@ -19,7 +19,6 @@ RUN apt-get update && \
     echo "fr_FR.UTF-8 UTF-8" >> /etc/locale.gen && \
     locale-gen
     # TODO Add more languages
-    
 
 COPY setup.py /opt/tuxeatpi_common/
 COPY tuxeatpi_common /opt/tuxeatpi_common/tuxeatpi_common
@@ -27,7 +26,5 @@ COPY tuxeatpi_common /opt/tuxeatpi_common/tuxeatpi_common
 RUN cd /opt/tuxeatpi_common && \
     python setup.py install && \
     rm -rf /opt/tuxeatpi_common
-
-WORKDIR /workdir
 
 ENTRYPOINT ["/entrypoint.sh"]

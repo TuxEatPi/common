@@ -1,10 +1,11 @@
 #!/bin/bash
 # set -x
 
-# Get tep args
-ARGS=$@
 # Get tep executable
 EXE=$(which tep-$1)
+# Get tep args
+shift
+ARGS=$@
 
 set -e
 
@@ -26,11 +27,11 @@ if [ "$EXE" != "" ]; then
         fi
     if [ $# == "1" ];
     then
-        echo exec su tep -c "$EXE -w /workdir -I /intents -D /dialogs"
-        exec su tep -c "$EXE -w /workdir -I /intents -D /dialogs"
+        echo exec su tep -c "$EXE -w /home/tep -I /intents -D /dialogs"
+        exec su tep -c "$EXE -w /home/tep -I /intents -D /dialogs"
     else
-        echo exec su tep -c "$EXE -w /workdir -I /intents -D /dialogs $ARGS"
-        exec su tep -c "$EXE -w /workdir -I /intents -D /dialogs $ARGS"
+        echo exec su tep -c "$EXE -w /home/tep -I /intents -D /dialogs $ARGS"
+        exec su tep -c "$EXE -w /home/tep -I /intents -D /dialogs $ARGS"
         # OR exec su tep -c "$EXE $ARGS" ????
     fi
 

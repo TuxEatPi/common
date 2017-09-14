@@ -1,6 +1,5 @@
 FROM tuxeatpi/common
 
-
 ENV PULSE_SERVER /run/pulse/native
 
 RUN apt-get update && \
