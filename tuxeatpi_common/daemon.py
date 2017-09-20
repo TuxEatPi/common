@@ -57,6 +57,8 @@ class TepBaseDaemon(object):
         self.registry = RegistryHandler(self.name, self.version, self.etcd_wrapper)
         # Add signal handler
         signal.signal(signal.SIGINT, self.signal_handler)
+        #
+        self.is_speaking = False
 
     def signal_handler(self, signal_, frame):
         """Signal handler"""
@@ -94,6 +96,11 @@ class TepBaseDaemon(object):
     def reload(self):
         """Reload the daemon"""
         self.logger.info("Reload action not Reimplemented. Do nothing")
+
+    def _set_speaking_state(self, state):
+        """The tux is currently speaking"""
+        self.logger.info("speech/state called")
+        self.is_speaking = state
 
     def get_dialog(self, key, **kwargs):
         """Get dialog and render it"""

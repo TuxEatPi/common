@@ -1,5 +1,6 @@
 """Module defining TuxEatPi Messages"""
 
+from concurrent.futures import ThreadPoolExecutor
 import json
 import logging
 import os
@@ -39,11 +40,12 @@ class MqttClient(paho.Client):
         paho.Client.__init__(self, clean_session=True, userdata=component.name)
         self._must_run = True
         self.component = component
-        self.topics = {}
+        self.topics = {"global/is_speaking": "_set_speaking_state"}
         self.logger = logging.getLogger(name="tep").getChild(component.name).getChild('mqttclient')
         self.host = os.environ.get("TEP_MQTT_HOST", "127.0.0.1")
         self.port = int(os.environ.get("TEP_MQTT_PORT", 1883))
         self._get_topics()
+        self.thread_pool = ThreadPoolExecutor()
 
     def _get_topics(self):
         """Get topics list from decorator"""
@@ -71,7 +73,9 @@ class MqttClient(paho.Client):
             payload = json.loads(msg.payload.decode())
             data = payload.get("data", {})
             method_name = self.topics[msg.topic]
-            getattr(self.component, method_name)(**data.get('arguments', {}))
+            # Run the callback method
+            self.thread_pool.submit(getattr(self.component, method_name),
+                                    **data.get('arguments', {}))
 
     def on_connect(self, client, userdata, flags, rc):  # pylint: disable=W0221,W0613
         """Callback on server connect"""
