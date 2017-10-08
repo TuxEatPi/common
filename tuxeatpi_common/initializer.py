@@ -17,8 +17,8 @@ class Initializer(object):
         """Run initialization"""
         self.logger.info("Starting initialize process")
         # start mqtt client
-        self.component._mqtt_client.run()
-        self.component._mqtt_sender.run()
+        self.component._wamp_client.run()
+#        self.component._mqtt_sender.run()
         # Load dialogs
         if not self.skip_dialogs:
             self.component.dialogs.load()

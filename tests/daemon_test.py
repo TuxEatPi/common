@@ -9,7 +9,10 @@ import logging
 import pytest
 
 
-from tuxeatpi_common.message import Message, is_mqtt_topic
+from wampy.peers.clients import Client
+
+from tuxeatpi_common.message import Message
+from tuxeatpi_common.wamp import is_wamp_topic
 from tuxeatpi_common.daemon import TepBaseDaemon
 from tuxeatpi_common.error import TuxEatPiError
 
@@ -33,7 +36,7 @@ class FakeDaemon(TepBaseDaemon):
         self.started = "OK"
         time.sleep(1)
 
-    @is_mqtt_topic("help")
+    @is_wamp_topic("help")
     def help_(self, help_arg):
         try:
             super(FakeDaemon, self).help_()
@@ -53,11 +56,16 @@ class TestDaemon(object):
         self.fake_daemon.settings.delete("/config/global")
         self.fake_daemon.settings.delete()
 
+        self.wamp_client = Client(realm="tuxeatpi")
+        self.wamp_client.start()
+
     @classmethod
     def teardown_class(self):
         self.fake_daemon.settings.delete("/config/global")
         self.fake_daemon.settings.delete()
         self.fake_daemon.shutdown()
+
+        self.wamp_client.stop()
 
     @pytest.mark.run_loop
     def test_daemon(self, capsys):
@@ -83,13 +91,29 @@ class TestDaemon(object):
         assert dialog_rendered == "This is a rendering test mytest"
 
         # Publish Messages
-        message = Message("fake_daemon/help", {"arguments": {"help_arg": "test1"}})
+        message = Message("fake_daemon.help", {"arguments": {"help_arg": "test1"}})
+
+
+        # TODO: waiting for https://github.com/noisyboiler/wampy/pull/42
         self.fake_daemon.publish(message)
+        # Then remove me
+        # Publish using an other wamp client
+        self.wamp_client.publish(topic="fake_daemon.help", message=message.payload)
+
+
         time.sleep(2)
         assert self.fake_daemon.help_arg == "test1"
         # Publish Messages override
-        message = Message("fake_daemon/help", {"arguments": {"help_arg": "test2"}})
-        self.fake_daemon.publish(message, override_topic="fake_daemon/help")
+        message = Message("fake_daemon.help", {"arguments": {"help_arg": "test2"}})
+
+
+        # TODO: waiting for https://github.com/noisyboiler/wampy/pull/42
+        self.fake_daemon.publish(message, override_topic="fake_daemon.help")
+        # Then remove me
+        # Publish using an other wamp client
+        self.wamp_client.publish(topic="fake_daemon.help", message=message.payload)
+
+
         time.sleep(1)
         assert self.fake_daemon.help_arg == "test2"
 

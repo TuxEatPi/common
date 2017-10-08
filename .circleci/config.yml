@@ -23,7 +23,7 @@ jobs:
   test:
     docker:
       - image: circleci/python:3.6.1
-      - image: eclipse-mosquitto:latest
+      - image: tuxeatpi/crossbar:cpy3-17.9.2
       - image: quay.io/coreos/etcd
         command: 
         - /usr/local/bin/etcd
@@ -33,6 +33,7 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
+      - setup_remote_docker
       - restore_cache:
           keys:
           - v1-dependencies-{{ checksum "requirements.txt" }}
@@ -63,7 +64,7 @@ jobs:
             python setup.py develop
             pycodestyle --max-line-length=100 tuxeatpi_common
             pylint --rcfile=.pylintrc -r no tuxeatpi_common
-            pytest --html=pytest/report.html --self-contained-html --junit-xml=pytest/junit.xml --cov=tuxeatpi_common/ --cov-report=term --cov-report=html:pytest/coverage/html --cov-report=xml:pytest/coverage/coverage.xml tests 
+            pytest --html=pytest/report.html --self-contained-html --junit-xml=pytest/junit.xml --cov=tuxeatpi_common/ --cov-report=term --cov-report=html:pytest/coverage/html --cov-report=xml:pytest/coverage/coverage.xml -p no:pytest_wampy tests 
             coverage combine || true
             coverage report --include='*/tuxeatpi_common/*'
       - store_artifacts:
@@ -112,4 +113,4 @@ jobs:
             curl -X POST https://circleci.com/api/v1.1/project/github/TuxEatPi/speech-nuance/`curl  -X GET https://circleci.com/api/v1.1/project/github/TuxEatPi/speech-nuance/tree/master?circle-token=$CIRCLE_TOKEN  |jq '.[0].build_num'`/retry?circle-token=$CIRCLE_TOKEN
             curl -X POST https://circleci.com/api/v1.1/project/github/TuxEatPi/nlu-nuance/`curl     -X GET https://circleci.com/api/v1.1/project/github/TuxEatPi/nlu-nuance/tree/master?circle-token=$CIRCLE_TOKEN     |jq '.[0].build_num'`/retry?circle-token=$CIRCLE_TOKEN
             curl -X POST https://circleci.com/api/v1.1/project/github/TuxEatPi/time/`curl           -X GET https://circleci.com/api/v1.1/project/github/TuxEatPi/time/tree/master?circle-token=$CIRCLE_TOKEN           |jq '.[0].build_num'`/retry?circle-token=$CIRCLE_TOKEN
-            #curl -X POST https://circleci.com/api/v1.1/project/github/TuxEatPi/being/`curl          -X GET https://circleci.com/api/v1.1/project/github/TuxEatPi/being/tree/master?circle-token=$CIRCLE_TOKEN           |jq '.[0].build_num'`/retry?circle-token=$CIRCLE_TOKEN
+            curl -X POST https://circleci.com/api/v1.1/project/github/TuxEatPi/being/`curl          -X GET https://circleci.com/api/v1.1/project/github/TuxEatPi/being/tree/master?circle-token=$CIRCLE_TOKEN           |jq '.[0].build_num'`/retry?circle-token=$CIRCLE_TOKEN

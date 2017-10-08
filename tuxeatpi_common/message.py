@@ -1,120 +1,12 @@
 """Module defining TuxEatPi Messages"""
 
-from concurrent.futures import ThreadPoolExecutor
 import json
-import logging
-import os
-import time
-
-import paho.mqtt.client as paho
 
 from tuxeatpi_common.error import TuxEatPiError
 
 
-class MqttSender(paho.Client):
-    """MQTT client class"""
-
-    def __init__(self, component):
-        paho.Client.__init__(self, clean_session=True, userdata=component.name)
-        self.component = component
-        self.logger = logging.getLogger(name="tep").getChild(component.name).getChild('mqttsender')
-        self.host = os.environ.get("TEP_MQTT_HOST", "127.0.0.1")
-        self.port = int(os.environ.get("TEP_MQTT_PORT", 1883))
-
-    def run(self):
-        """Run MQTT client"""
-        # TODO handle reconnect
-        self.connect(self.host, self.port, 60)
-        self.loop_start()
-
-    def stop(self):
-        """Stop MQTT client"""
-        self.loop_stop()
-        self.disconnect()
-
-
-class MqttClient(paho.Client):
-    """MQTT client class"""
-
-    def __init__(self, component):
-        paho.Client.__init__(self, clean_session=True, userdata=component.name)
-        self._must_run = True
-        self.component = component
-        self.topics = {"global/is_speaking": "_set_speaking_state"}
-        self.logger = logging.getLogger(name="tep").getChild(component.name).getChild('mqttclient')
-        self.host = os.environ.get("TEP_MQTT_HOST", "127.0.0.1")
-        self.port = int(os.environ.get("TEP_MQTT_PORT", 1883))
-        self._get_topics()
-        self.thread_pool = ThreadPoolExecutor()
-
-    def _get_topics(self):
-        """Get topics list from decorator"""
-        for attr in dir(self.component):
-            if callable(getattr(self.component, attr)):
-                method = getattr(self.component, attr)
-                if hasattr(method, "_topic_name"):
-                    if method._topic_name.startswith("global/"):
-                        topic_name = method._topic_name
-                    else:
-                        topic_name = "/".join((self.component.name, method._topic_name))
-                    self.topics[topic_name] = method.__name__
-        self.logger.debug(self.topics)
-
-    def on_message(self, mqttc, obj, msg):  # pylint: disable=W0221,W0613
-        """Callback on receive message"""
-        self.logger.debug("topic: %s - QOS: %s - payload: %s",
-                          msg.topic, str(msg.qos), str(msg.payload))
-        class_name, _ = msg.topic.split("/")
-        if self.component.name.lower() != class_name.lower() and class_name != "global":
-            self.logger.error("Bad destination")
-        elif msg.topic not in self.topics:
-            self.logger.error("Bad destination function %s", msg.topic)
-        else:
-            payload = json.loads(msg.payload.decode())
-            data = payload.get("data", {})
-            method_name = self.topics[msg.topic]
-            # Run the callback method
-            self.thread_pool.submit(getattr(self.component, method_name),
-                                    **data.get('arguments', {}))
-
-    def on_connect(self, client, userdata, flags, rc):  # pylint: disable=W0221,W0613
-        """Callback on server connect"""
-        self.logger.debug("MQTT client connected")
-
-    def on_subscribe(self, client, userdata, mid, granted_qos):  # pylint: disable=W0221,W0613
-        """Callback on topic subcribing"""
-        #  self.logger.debug("MQTT subcribed to %s")
-        pass
-
-    def on_publish(self, client, userdata, mid):  # pylint: disable=W0221,W0613
-        """Callback on message publish"""
-        self.logger.debug("Message published")
-
-    def run(self):
-        """Run MQTT client"""
-        # TODO handle reconnect
-        while self._must_run:
-            try:
-                self.connect(self.host, self.port, 60)
-                break
-            except ConnectionRefusedError:
-                self.logger.warning("Can not connect to mqtt server, retrying in 5 seconds")
-                time.sleep(5)
-
-        for topic_name in self.topics:
-            self.subscribe(topic_name, 0)
-            self.logger.info("Subcribe to topic %s", topic_name)
-        self.loop_start()
-
-    def stop(self):
-        """Stop MQTT client"""
-        self._must_run = False
-        self.loop_stop()
-        self.disconnect()
-
-
 class Message():
-    """MQTT Message class"""
+    """Message class"""
 
     def __init__(self, topic, data, context="general", source=None):
         self.topic = topic
@@ -139,12 +31,3 @@ class Message():
             'context': self.context,
             'source': self.source,
         })
-
-
-def is_mqtt_topic(topic_name):
-    """Add a method as a MQTT topic"""
-    def wrapper(func):
-        """Wrapper for is_mqtt_topic decorator"""
-        func._topic_name = topic_name
-        return func
-    return wrapper

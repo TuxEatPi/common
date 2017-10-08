@@ -8,3 +8,5 @@ pycodestyle
 pytest
 pytest-cov
 pytest-html
+colorlog
+psutil

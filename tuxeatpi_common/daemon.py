@@ -4,8 +4,7 @@ import logging
 import signal
 import time
 
-from tuxeatpi_common.message import is_mqtt_topic, MqttClient, Message, MqttSender
-from tuxeatpi_common.error import TuxEatPiError
+from tuxeatpi_common.wamp import is_wamp_rpc, is_wamp_topic, WampClient
 from tuxeatpi_common.subtasker import SubTasker
 from tuxeatpi_common.dialogs import DialogsHandler
 from tuxeatpi_common.initializer import Initializer
@@ -20,7 +19,10 @@ class TepBaseDaemon(object):
     """Base Daemon for TuxEatPi"""
 
     def __init__(self, name, workdir, intents_folder, dialog_folder, logging_level=logging.INFO):
-        self._async_loop = asyncio.get_event_loop()
+        # Get event loop
+        # self._async_loop = asyncio.get_event_loop()
+        self._async_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self._async_loop)
         # Get Name
         self.name = name
         self.version = "0.0.0"
@@ -33,9 +35,10 @@ class TepBaseDaemon(object):
         # Other component states
         self._component_states = {}
         self._reload_needed = False
-        # Get mqtt client
-        self._mqtt_client = MqttClient(self)
-        self._mqtt_sender = MqttSender(self)
+        # Get wamp client
+        self._wamp_client = WampClient(self)
+        self.publish = self._wamp_client.publish
+        self.call = self._wamp_client.call
         # Set the main loop to ON
         self._run_main_loop = True
         # Etcd
@@ -76,24 +79,14 @@ class TepBaseDaemon(object):
         console_handler.setFormatter(formatter)
         self.logger.addHandler(console_handler)
 
-    # MQTT Related
-    def publish(self, message, override_topic=None, qos=0):
-        """Publish message to MQTT"""
-        if not isinstance(message, Message):
-            raise TuxEatPiError("message must be a Message object")
-        if override_topic is None:
-            topic = message.topic
-        else:
-            topic = override_topic
-        self._mqtt_sender.publish(topic=topic, payload=message.payload, qos=qos)
-
     # Standard mqtt topic
-    @is_mqtt_topic("help")
+    @is_wamp_rpc("help")
     def help_(self):
         """Return help for this daemon"""
         raise NotImplementedError
 
-    @is_mqtt_topic("reload")
+    @is_wamp_rpc("reload")
+    @is_wamp_topic("reload")
     def reload(self):
         """Reload the daemon"""
         self.logger.info("Reload action not Reimplemented. Do nothing")
@@ -148,13 +141,14 @@ class TepBaseDaemon(object):
         while self._run_main_loop:
             self.main_loop()
 
-    @is_mqtt_topic("shutdown")
+    @is_wamp_rpc("shutdown")
+    @is_wamp_topic("shutdown")
     def shutdown(self):
         """Shutdown the daemon form mqtt message"""
         self.logger.info("Stopping %s", self.name)
         self.settings.stop()
         self._tasks_thread.stop()
-        self._mqtt_client.stop()
+        self._wamp_client.stop()
         self._run_main_loop = False
         # self._async_loop.stop()
         self.logger.info("Stop %s", self.name)
