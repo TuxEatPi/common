@@ -2,7 +2,6 @@
 import asyncio
 import logging
 import signal
-import time
 
 from tuxeatpi_common.wamp import is_wamp_rpc, is_wamp_topic, WampClient
 from tuxeatpi_common.subtasker import SubTasker
@@ -61,8 +60,6 @@ class TepBaseDaemon(object):
         self.registry = RegistryHandler(self.name, self.version, self.etcd_wrapper)
         # Add signal handler
         signal.signal(signal.SIGINT, self.signal_handler)
-        #
-        self.is_speaking = False
 
     def signal_handler(self, signal_, frame):
         """Signal handler"""
@@ -90,26 +87,6 @@ class TepBaseDaemon(object):
     def reload(self):
         """Reload the daemon"""
         self.logger.info("Reload action not Reimplemented. Do nothing")
-
-    def _set_speaking_state(self, state):
-        """The tux is currently speaking"""
-        self.logger.info("speech/state called")
-        self.is_speaking = state
-
-    def wait_for_speaking(self, timeout=30):
-        """Wait for start and end speech"""
-        start_time = time.time()
-        # Wait for start speak
-        while (not self.is_speaking) and self._run_main_loop:
-            self.logger.debug("waiting for starting speak")
-            if timeout and start_time + timeout < time.time():
-                return False
-        # Wait for ending speak
-        while self.is_speaking and self._run_main_loop:
-            self.logger.debug("waiting for ending speak")
-            if timeout and start_time + timeout < time.time():
-                return False
-        return True
 
     def get_dialog(self, key, **kwargs):
         """Get dialog and render it"""

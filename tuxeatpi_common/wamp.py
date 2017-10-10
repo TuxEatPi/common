@@ -51,7 +51,6 @@ class WampClient(Client):
 
     def on_message(self, message, meta):  # pylint: disable=W0221,W0613
         """Callback on receive message"""
-        print("BBBBBBBBBBBBBBBBBBBB")
         self.logger.debug("topic: %s - subscription_id: %s - message: %s",
                           meta['topic'], meta['subscription_id'], message)
         class_name, _ = meta['topic'].split(".")
