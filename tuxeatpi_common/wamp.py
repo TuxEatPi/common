@@ -106,7 +106,7 @@ class WampClient(Client):
         for rpc_name, method in self.rpc_funcs.items():
             self.session._register_procedure(rpc_name)
             if hasattr(self, rpc_name):
-                raise Exception("methodalready exexits: %s", rpc_name)
+                raise Exception("method already exexits: %s", rpc_name)
             setattr(self, rpc_name, method)
             self.logger.info("RPC %s registereds", rpc_name)
         # Registering RPCs
