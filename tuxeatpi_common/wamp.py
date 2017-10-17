@@ -79,9 +79,18 @@ class WampClient(Client):
                                         message=message.payload)
 
     def call(self, endpoint, *args, **kwargs):  # pylint: disable=W0221
-        """Call RPC function"""
+        """Call RPC function
+
+        .. note:: If the procedure doesn't exist, this method do not crash
+
+        .. todo:: Do we want to crash ?
+        """
         ret = super(WampClient, self).call(endpoint, *args, **kwargs)
         if isinstance(ret, wampy.messages.error.Error):
+            # Do not crash if the procedure doesn't exist
+            # TODO: Do we want to crash ?
+            if ret.error == "wamp.error.no_such_procedure":
+                return None
             raise TuxEatPiError(ret.message)
         return ret
 
