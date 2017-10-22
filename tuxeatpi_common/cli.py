@@ -43,7 +43,7 @@ def main_cli(workdir, intent_folder, dialog_folder, **kwargs):
     tep_daemon = DAEMON_CLASS(prog_name, workdir, intent_folder, dialog_folder, **kwargs)
     # Run the deamon
     runner = ApplicationRunner(url="ws://localhost:8080", realm="tuxeatpi")
-    runner.run(DAEMON_CLASS)
+    runner.run(tep_daemon)
 
 #    tep_daemon.start()
 

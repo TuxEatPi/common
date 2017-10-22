@@ -21,7 +21,6 @@ class Initializer(object):
 #        self.component._mqtt_sender.run()
         self._async_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self._async_loop)
-        return
         # Load dialogs
         if not self.skip_dialogs:
             self.component.dialogs.load()

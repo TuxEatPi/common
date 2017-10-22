@@ -4,6 +4,8 @@ import json
 import logging
 import os
 import time
+from concurrent.futures import ThreadPoolExecutor
+
 
 import asyncio
 from autobahn.asyncio.wamp import ApplicationSession, ApplicationRunner
@@ -21,12 +23,14 @@ class WampClient(ApplicationSession):
         ApplicationSession.__init__(self, self.config)
         self.host = os.environ.get("TEP_MQTT_HOST", "127.0.0.1")
         self.port = int(os.environ.get("TEP_MQTT_PORT", 8080))
-        self.logger = logging.getLogger(name="tep").getChild(component.name).getChild('wampclient')
+#        self.logger = logging.getLogger(name="tep").getChild(component.name).getChild('wampclient')
         self.component = component
         self.topics = {}
         self.rpc_funcs = {}
         #self._get_topics()
         self._must_run = True
+        self._thread_pool = ThreadPoolExecutor()
+
 
     async def onJoin(self, details):
         """Startup function for main loop"""
@@ -87,8 +91,12 @@ class WampClient(ApplicationSession):
         else:
             payload = json.loads(message)
             data = payload.get("data", {})
-            # Call method
-            self.topics[details.topic](**data.get('arguments', {}))
+ #           # Call method
+#            self.topics[details.topic](**data.get('arguments', {}))
+            # Run the callback method
+            self._thread_pool.submit(self.topics[details.topic],
+                                    **data.get('arguments', {}))
+
 
     def publish(self, message, override_topic=None):  # pylint: disable=W0221
         """Publish message to WAMP"""
