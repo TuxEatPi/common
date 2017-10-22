@@ -30,7 +30,7 @@ class EtcdWrapper(object):
         self.sync_client = None
         self.sync_sender = None
         self.async_client = None
-        self._connect()
+#        self._connect()
 
     def _connect(self):
         """Return an etcd client"""

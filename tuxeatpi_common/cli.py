@@ -4,6 +4,7 @@ import sys
 
 import click
 from setproctitle import setproctitle  # pylint: disable=E0611
+from autobahn.asyncio.wamp import ApplicationRunner
 
 from tuxeatpi_common.daemon import TepBaseDaemon
 
@@ -41,7 +42,10 @@ def main_cli(workdir, intent_folder, dialog_folder, **kwargs):
     prog_name = DAEMON_CLASS.__name__.lower()
     tep_daemon = DAEMON_CLASS(prog_name, workdir, intent_folder, dialog_folder, **kwargs)
     # Run the deamon
-    tep_daemon.start()
+    runner = ApplicationRunner(url="ws://localhost:8080", realm="tuxeatpi")
+    runner.run(DAEMON_CLASS)
+
+#    tep_daemon.start()
 
 
 # Add cli command

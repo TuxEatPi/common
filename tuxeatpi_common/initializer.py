@@ -17,19 +17,24 @@ class Initializer(object):
         """Run initialization"""
         self.logger.info("Starting initialize process")
         # start mqtt client
-        self.component._wamp_client.run()
+#        self.component._wamp_client.run()
 #        self.component._mqtt_sender.run()
+        self._async_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self._async_loop)
+        return
         # Load dialogs
         if not self.skip_dialogs:
             self.component.dialogs.load()
         # Get settings
         if not self.skip_settings:
-            loop = self.component._async_loop
-            tasks = [self.component.settings.read(),
-                     self.component.settings.read_global(),
-                     ]
-            loop.run_until_complete(asyncio.wait(tasks))
-            self.logger.info("Global and component settings received")
+            self.component.settings.read()
+            self.component.settings.read_global()
+#            loop = self.component._async_loop
+#            tasks = [self.component.settings.read(),
+#                     self.component.settings.read_global(),
+#                     ]
+#            loop.run_until_complete(asyncio.wait(tasks))
+#            self.logger.info("Global and component settings received")
         # Send intent files
         if not self.skip_intents:
             self.component.intents.save(self.component.settings.nlu_engine)
