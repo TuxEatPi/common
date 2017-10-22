@@ -28,6 +28,52 @@ class WampClient(ApplicationSession):
         #self._get_topics()
         self._must_run = True
 
+    async def onJoin(self, details):
+        """Startup function for main loop"""
+        self._get_topics()
+        await self._subscribe_and_register()
+        # Start main loop
+        return
+        # TODO put this in a thread
+        self.logger.info("Starting main loop")
+        while self._run_main_loop:
+            self.main_loop()
+
+    async def _subscribe_and_register(self):
+        # Subscribing topics
+        for topic_name, method in self.topics.items():
+            # subscriber = subscribe(topic=topic_name)
+            sub = await self.subscribe(self.on_message, topic_name, options=SubscribeOptions(details_arg='details'))
+            self.logger.info("Subcribe to topic %s - %s", topic_name, sub.id)
+
+        # Registering RPCs
+        for rpc_name, method in self.rpc_funcs.items():
+            sub = await self.register(method, rpc_name,)
+            self.logger.info("Register %s - %s", rpc_name, sub.id)
+
+    def _get_topics(self):
+        """Get topics list from decorator"""
+        for attr in dir(self):
+            if callable(getattr(self, attr)):
+                method = getattr(self, attr)
+                # Subscribing to a topic
+                if hasattr(method, "_topic_name"):
+                    if getattr(method, "_is_root"):
+                        topic_name = method._topic_name
+                    else:
+                        topic_name = ".".join((self.name,
+                                               method._topic_name))
+                    self.topics[topic_name] = method
+                # Register RPC function
+                if hasattr(method, "_rpc_name"):
+                    if getattr(method, "_is_root"):
+                        rpc_name = method._rpc_name
+                    else:
+                        rpc_name = ".".join((self.name,
+                                             method._rpc_name))
+                    self.rpc_funcs[rpc_name] = method
+        self.logger.debug(self.topics)
+
     def on_message(self, message, details):  # pylint: disable=W0221,W0613
         """Callback on receive message"""
         print(details)
