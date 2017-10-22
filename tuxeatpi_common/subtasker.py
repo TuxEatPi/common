@@ -9,7 +9,9 @@ class SubTasker(threading.Thread):
 
     def __init__(self, component):
         threading.Thread.__init__(self)
-        self._async_loop = asyncio.get_event_loop()
+        self._async_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self._async_loop)
+
         self.logger = logging.getLogger(name="tep").getChild(component.name).getChild('subtasker')
         self.component = component
 
@@ -44,8 +46,8 @@ class SubTasker(threading.Thread):
         asyncio.set_event_loop(self._async_loop)
         self.logger.info("Starting subtasker for %s", self.component.name)
         tasks = [self._send_alive(),
-                 self.component.settings.read(watch=True),
-                 self.component.settings.read_global(watch=True),
+                 self.component.settings.async_read(watch=True),
+                 self.component.settings.async_read_global(watch=True),
                  # self._wait_for_reload(),
                  ]
         try:

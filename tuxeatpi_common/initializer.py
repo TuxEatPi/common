@@ -24,11 +24,8 @@ class Initializer(object):
             self.component.dialogs.load()
         # Get settings
         if not self.skip_settings:
-            loop = self.component._async_loop
-            tasks = [self.component.settings.read(),
-                     self.component.settings.read_global(),
-                     ]
-            loop.run_until_complete(asyncio.wait(tasks))
+            self.component.settings.read()
+            self.component.settings.read_global()
             self.logger.info("Global and component settings received")
         # Send intent files
         if not self.skip_intents:

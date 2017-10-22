@@ -43,7 +43,45 @@ class SettingsHandler(object):
         self.logger.info("Stopping settings")
         self._wait_config = False
 
-    async def read(self, watch=False):
+    def read(self, recursive=False, wait=False, timeout=60):
+        raw_data = None
+        while not raw_data:
+            raw_data = self.etcd_wrapper.read(self.key)
+            if not raw_data:
+                self.logger.info("Component settings not found, waiting")
+                time.sleep(3)
+                continue
+            self.logger.info("Component settings received")
+            self.params = json.loads(raw_data.value)  # pylint: disable=E1101
+            self.component.set_config(config=self.params)
+
+    def read_global(self):
+        raw_data = None
+        while not raw_data:
+            raw_data = self.etcd_wrapper.read(self.global_key)
+            if not raw_data:
+                self.logger.info("Global settings not found, waiting")
+                time.sleep(3)
+                continue
+            self.logger.info("Global settings received")
+            data = json.loads(raw_data.value)
+            if data.get('language') != self.language:
+                self.language = data['language']
+                self.logger.info("Language %s set", self.language)
+                # Set locale
+                encoding = locale.getlocale()[1]
+                locale.setlocale(locale.LC_ALL, (self.language, encoding))
+                # TODO Implement reload or not ???
+                self._reload_needed = True
+                self.logger.info("Reloading")
+            if data.get('nlu_engine') != self.nlu_engine:
+                self.nlu_engine = data['nlu_engine']
+                self.logger.info("NLU engine `%s` set", self.nlu_engine)
+                # TODO Implement reload or not ???
+                self._reload_needed = True
+                self.logger.info("Reloading")
+
+    async def async_read(self, watch=False):
         """Watch for component settings change in etcd
 
         This is done by the subtaskers
@@ -64,7 +102,7 @@ class SettingsHandler(object):
             if not watch:
                 break
 
-    async def read_global(self, watch=False):
+    async def async_read_global(self, watch=False):
         """Watch for global settings change in etcd
 
         This is done by the subtaskers
