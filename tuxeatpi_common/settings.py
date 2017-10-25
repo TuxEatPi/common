@@ -1,9 +1,10 @@
 """Module defining how to handle component settings"""
 import asyncio
-import logging
-import os
 import json
 import locale
+import logging
+import os
+import time
 
 
 class SettingsHandler(object):
@@ -43,7 +44,8 @@ class SettingsHandler(object):
         self.logger.info("Stopping settings")
         self._wait_config = False
 
-    def read(self, recursive=False, wait=False, timeout=60):
+    def read(self):
+        """Read settings from etcd and update component config"""
         raw_data = None
         while not raw_data:
             raw_data = self.etcd_wrapper.read(self.key)
@@ -56,6 +58,7 @@ class SettingsHandler(object):
             self.component.set_config(config=self.params)
 
     def read_global(self):
+        """Read global settings from etcd and update component global config"""
         raw_data = None
         while not raw_data:
             raw_data = self.etcd_wrapper.read(self.global_key)

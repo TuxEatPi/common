@@ -9,8 +9,7 @@ class SubTasker(threading.Thread):
 
     def __init__(self, component):
         threading.Thread.__init__(self)
-        self._async_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self._async_loop)
+        self._async_loop = None
 
         self.logger = logging.getLogger(name="tep").getChild(component.name).getChild('subtasker')
         self.component = component
@@ -39,11 +38,18 @@ class SubTasker(threading.Thread):
     def stop(self):
         """Stop subtasker"""
         self.logger.info("Stopping subtasker for %s", self.component.name)
-        self._async_loop.stop()
+        if self._async_loop is not None:
+            self._async_loop.stop()
 
     def run(self):
         """Startup function for main loop"""
-        asyncio.set_event_loop(self._async_loop)
+        try:
+            self._async_loop = asyncio.get_event_loop()
+        except RuntimeError:
+            self.logger.debug("Get New event loop")
+            self._async_loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self._async_loop)
+
         self.logger.info("Starting subtasker for %s", self.component.name)
         tasks = [self._send_alive(),
                  self.component.settings.async_read(watch=True),
@@ -51,7 +57,12 @@ class SubTasker(threading.Thread):
                  # self._wait_for_reload(),
                  ]
         try:
-            self._async_loop.run_until_complete(asyncio.wait(tasks))
+            if self._async_loop.is_running():
+                future = asyncio.run_coroutine_threadsafe(asyncio.wait(tasks),
+                                                          self._async_loop)
+                future.result()
+            else:
+                self._async_loop.run_until_complete(asyncio.wait(tasks))
         except RuntimeError:
             # Do we have to do something ?
             pass

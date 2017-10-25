@@ -61,10 +61,8 @@ class TestInit(object):
     def test_init(self):
         # Create bad message
 
-        init_test = Initializer(selffake_daemon)
+        init_test = Initializer(self.fake_daemon)
         init_test.run()
-
-        
 
         assert dialog_test._dialogs == loaded_dialogs
 

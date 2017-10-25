@@ -1,5 +1,4 @@
 """Module defining the init process for TuxEatPi component"""
-import asyncio
 import logging
 
 
@@ -18,7 +17,6 @@ class Initializer(object):
         self.logger.info("Starting initialize process")
         # start mqtt client
         self.component._wamp_client.run()
-#        self.component._mqtt_sender.run()
         # Load dialogs
         if not self.skip_dialogs:
             self.component.dialogs.load()
