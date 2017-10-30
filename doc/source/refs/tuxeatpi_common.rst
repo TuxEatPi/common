@@ -23,4 +23,5 @@ Submodules
    tuxeatpi_common.registry
    tuxeatpi_common.settings
    tuxeatpi_common.subtasker
+   tuxeatpi_common.wamp
 

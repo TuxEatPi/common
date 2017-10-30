@@ -10,6 +10,7 @@ Welcome to TuxEatPi Common's documentation!
     :maxdepth: 2
     :caption: Contents:
 
+    process
     refs/modules
 
 
