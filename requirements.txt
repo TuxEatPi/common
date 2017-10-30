@@ -4,4 +4,4 @@ python-etcd==0.4.5
 six==1.10.0
 setproctitle==1.1.10
 -e git+https://github.com/TuxEatPi/python-aio-etcd.git@0.4.5.0.tep.1#egg=aio_etcd
-wampy==0.9.9
+wampy==0.9.11
