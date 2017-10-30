@@ -73,9 +73,7 @@ class WampClient(Client):
         else:
             topic = override_topic
         super(WampClient, self).publish(topic=topic,
-                                        # TODO: waiting for
-                                        # https://github.com/noisyboiler/wampy/pull/42
-                                        # options={"exclude_me": False},
+                                        options={"exclude_me": False},
                                         message=message.payload)
 
     def call(self, endpoint, *args, **kwargs):  # pylint: disable=W0221
