@@ -1,4 +1,5 @@
 """TuxEatPi Base Main module"""
+import logging
 import os
 import sys
 
@@ -29,8 +30,12 @@ def set_daemon_class(class_object):
               type=click.Path(exists=True, file_okay=False, dir_okay=True, readable=True))
 @click.option('--dialog-folder', '-D', required=True, help="Dialog folder",
               type=click.Path(exists=True, file_okay=False, dir_okay=True, readable=True))
-def main_cli(workdir, intent_folder, dialog_folder, **kwargs):
+@click.option('--log-level', '-l', required=False, help="Log level", default="info",
+              type=click.Choice(['debug', 'info', 'warning', 'error', 'critical']))
+def main_cli(workdir, intent_folder, dialog_folder, log_level, **kwargs):
     """Start command"""
+    # Get log level
+    logging_level = getattr(logging, log_level.upper())
     # Get workdir
     if workdir is None:
         workdir = os.getcwd()
@@ -39,7 +44,12 @@ def main_cli(workdir, intent_folder, dialog_folder, **kwargs):
     setproctitle(proc_title)
     # Standard preparation
     prog_name = DAEMON_CLASS.__name__.lower()
-    tep_daemon = DAEMON_CLASS(prog_name, workdir, intent_folder, dialog_folder, **kwargs)
+    tep_daemon = DAEMON_CLASS(prog_name,
+                              workdir,
+                              intent_folder,
+                              dialog_folder,
+                              logging_level,
+                              **kwargs)
     # Run the deamon
     tep_daemon.start()
 
