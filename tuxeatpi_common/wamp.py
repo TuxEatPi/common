@@ -62,7 +62,13 @@ class WampClient(Client):
             payload = json.loads(message)
             data = payload.get("data", {})
             # Call method
-            self.topics[meta['topic']](**data.get('arguments', {}))
+            try:
+                self.topics[meta['topic']](**data.get('arguments', {}))
+            except TypeError as exp:
+                self.logger.critical("Error on topic event: %s - subscription_id: %s"
+                                     " - message: %s",
+                                     meta['topic'], meta['subscription_id'], message)
+                self.logger.critical("Error: %s", exp)
 
     def publish(self, message, override_topic=None):  # pylint: disable=W0221
         """Publish message to WAMP"""
