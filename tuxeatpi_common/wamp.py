@@ -16,8 +16,8 @@ class WampClient(Client):
     """Wamp client class"""
 
     def __init__(self, component):
-        self.host = os.environ.get("TEP_MQTT_HOST", "127.0.0.1")
-        self.port = int(os.environ.get("TEP_MQTT_PORT", 8080))
+        self.host = os.environ.get("TEP_WAMP_HOST", "127.0.0.1")
+        self.port = int(os.environ.get("TEP_WAMP_PORT", 8080))
         Client.__init__(self, realm="tuxeatpi", url="ws://{}:{}".format(self.host, self.port))
         self.component = component
         self.logger = logging.getLogger(name="tep").getChild(component.name).getChild('wampclient')
@@ -93,7 +93,7 @@ class WampClient(Client):
         return ret
 
     def run(self):
-        """Run MQTT client"""
+        """Run WAMP client"""
 
         # TODO handle reconnect
         while self._must_run:
@@ -101,7 +101,7 @@ class WampClient(Client):
                 self.start()
                 break
             except ConnectionRefusedError:
-                self.logger.warning("Can not connect to mqtt server, retrying in 5 seconds")
+                self.logger.warning("Can not connect to wamp server, retrying in 5 seconds")
                 time.sleep(5)
 
         # Subscribing topics
@@ -119,7 +119,7 @@ class WampClient(Client):
         # Registering RPCs
 
     def stop(self):
-        """Stop MQTT client"""
+        """Stop WAMP client"""
         try:
             super(WampClient, self).stop()
         except AssertionError:

@@ -76,7 +76,7 @@ class TepBaseDaemon(object):
         console_handler.setFormatter(formatter)
         self.logger.addHandler(console_handler)
 
-    # Standard mqtt topic
+    # Standard topics
     @is_wamp_rpc("help")
     def help_(self):
         """Return help for this daemon"""
@@ -88,6 +88,7 @@ class TepBaseDaemon(object):
         """Reload the daemon"""
         self.logger.info("Reload action not Reimplemented. Do nothing")
 
+    # Main methods
     def get_dialog(self, key, **kwargs):
         """Get dialog and render it"""
         return self.dialogs.get_dialog(self.settings.language, key, **kwargs)
@@ -102,7 +103,6 @@ class TepBaseDaemon(object):
         """
         raise NotImplementedError
 
-    # Main methods
     def main_loop(self):  # pylint: disable=R0201
         """Main loop
 
@@ -121,7 +121,7 @@ class TepBaseDaemon(object):
     @is_wamp_rpc("shutdown")
     @is_wamp_topic("shutdown")
     def shutdown(self):
-        """Shutdown the daemon form mqtt message"""
+        """Shutdown the daemon"""
         self.logger.info("Stopping %s", self.name)
         self.settings.stop()
         self._tasks_thread.stop()

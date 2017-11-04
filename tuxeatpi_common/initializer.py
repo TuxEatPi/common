@@ -15,7 +15,7 @@ class Initializer(object):
     def run(self):
         """Run initialization"""
         self.logger.info("Starting initialize process")
-        # start mqtt client
+        # start wamp client
         self.component._wamp_client.run()
         # Load dialogs
         if not self.skip_dialogs:
